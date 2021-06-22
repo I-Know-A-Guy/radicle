@@ -12,6 +12,7 @@ target_include_directories(
        	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# TODO if statement for either adding subhook_unix.c or subhook_windows.c depending on building platform
 add_library(
 	radicle_test_lib
 	STATIC
