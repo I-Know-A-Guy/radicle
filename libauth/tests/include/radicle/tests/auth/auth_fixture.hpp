@@ -21,9 +21,9 @@
  * @brief Contains RadicleAuthTests fixture for testing.
  * @author Nils Egger
  * @todo Move basic pgdb fake functions to a pgdb testing library
- * @addtogroup Tests
+ * @addtogroup testing 
  * @{
- * @addtogroup Auth
+ * @addtogroup auth_testing Auth Testing
  * @{ 
  */
 

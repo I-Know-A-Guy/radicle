@@ -59,6 +59,7 @@ id SERIAL PRIMARY KEY,\
 owner UUID,\
 token TEXT NOT NULL,\
 created TIMESTAMP NOT NULL,\
+expires TIMESTAMP NOT NULL,\
 revoked BOOLEAN DEFAULT TRUE,\
 salt TEXT NOT NULL,\
 FOREIGN KEY (owner) REFERENCES Accounts(uuid)\

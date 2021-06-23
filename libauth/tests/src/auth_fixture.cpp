@@ -16,9 +16,32 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * @file
+ * @brief Contains functions for faking pgdb account queries.
+ * @author Nils Egger
+ * @addtogroup testing 
+ * @{
+ * @addtogroup auth_testing
+ * @{
+ */
+
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/pgdb.h"
 
+/**
+ * @brief Sets values of a fake PGresult. Should only be used for testing.
+ * @bug Doesnt work for multiple values. Instead pass around PGresAttDesc pointer.
+ *
+ * @param result Result to be filled with values.
+ * @param row Row of result to fill.
+ * @param column Column of value to be inserted.
+ * @param name Column name.
+ * @param value Column value.
+ * @param length Column value length.
+ *
+ * @returns Returns 0 on succes.
+ */
 int set_fake_value(PGresult* result, const int row, const int column, const char* name, char* value, int length) {
 	PGresAttDesc attr = {(char*)name, 0, 0, 1, 0, length, 0};
 	// TODO for multiple list is needed ,
@@ -100,3 +123,6 @@ int hmac_sign_fake(const unsigned char* input, const size_t input_length, const 
 	*buffer = string_from_literal("e65ca5c23a3af38236ab9723d8d5a1c0");
 	return 0;
 }
+
+/** @} */
+/** @} */

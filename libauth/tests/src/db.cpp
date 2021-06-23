@@ -42,7 +42,7 @@ TEST_F(RadicleAuthTests, TestSaveRegistration) {
 TEST_F(RadicleAuthTests, TestSaveSession) {
 	install_fetch_id_hook();
 	uint32_t id = 0;
-	ASSERT_EQ(auth_save_session(conn, common_uuid, common_string, common_string, &id), 0);
+	ASSERT_EQ(auth_save_session(conn, common_uuid, common_string, 0, common_string, &id), 0);
 	EXPECT_GT(id, 0);
 }
 

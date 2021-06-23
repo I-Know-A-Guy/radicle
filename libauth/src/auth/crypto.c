@@ -106,6 +106,29 @@ int hmac_sign(const unsigned char* input, const size_t input_length, const strin
 	return 0;
 }
 
+int hmac_verify(const string_t* key, const string_t* signature, const string_t* input) {
+	string_t* buffer = NULL;
+	if(hmac_sign((unsigned char*)input->ptr, input->length, key, &buffer)) {
+		return 1;
+	}
+
+	if(signature->length != buffer->length || strcmp(buffer->ptr, signature->ptr) != 0) {
+		string_free(&buffer);
+		return 1;
+	}
+	string_free(&buffer);
+	return 0;
+}
+
+int hmac_verify_salted(const string_t* key, const string_t* salt, const string_t* signature, const string_t* input) {
+	string_t* final_key = string_new_empty(key->length + salt->length);
+	strncpy(final_key->ptr, key->ptr, key->length);
+	strncat(final_key->ptr, salt->ptr, salt->length);
+	int res = hmac_verify(final_key, signature, input);
+	string_free(&final_key);
+	return res;
+}
+
 int auth_hash_password(const string_t* password, string_t** buffer) {
 	string_t* salt;
 	if(auth_generate_random_base64(16, &salt)) {

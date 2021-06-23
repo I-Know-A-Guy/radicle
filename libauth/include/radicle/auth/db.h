@@ -40,6 +40,11 @@ extern "C" {
 #endif
 
 /**
+* @brief Sessions expire one month after being created or manually revoked.
+*/
+#define SESSION_EXPIRE 2629800 // One month in seconds
+
+/**
  * @brief Inserts account into Accounts. Sets verified to false.
  *
  * @param conn Connection to database.
@@ -72,10 +77,11 @@ int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* tok
  *
  * @returns Returns 0 on success.
  */
-int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, const string_t* salt, uint32_t* id);
+int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, const time_t expires, const string_t* salt, uint32_t* id);
 
 /**
  * @brief Saves session access to database.
+ * @todo Add status like, login, failed_login, invalid_signature etc.
  *
  * @param conn Connection to database.
  * @param session_id Row id of session.
@@ -95,6 +101,19 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
  * @returns Returns 0 on success.
  */
 int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_t** account);
+
+/**
+ * @brief Looks up cookie in database, verifies expiration or revoked and returns id, salt and account data. 
+ * @todo write test 
+ *
+ * @param conn Connection to database.
+ * @param cookie Cookie which contains the token.
+ * @param session Queried session id and salt. 
+ * @param account Account to be set on valid cookie verification.
+ * 
+ * @returns Returns 0 on success.
+ */
+int auth_get_account_by_session_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account);
 
 #if defined(__cplusplus)
 }

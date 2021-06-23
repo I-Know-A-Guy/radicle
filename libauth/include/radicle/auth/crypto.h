@@ -130,6 +130,29 @@ int base64_decode(const string_t* base64, string_t** buffer);
  */
 int hmac_sign(const unsigned char* input, const size_t input_length, const string_t* key, string_t** buffer);
 
+/**
+ * @brief Check if a hmac signed signature matches any given input.
+ *
+ * @param key Key used to create signature.
+ * @param signature Expected signature hash.
+ * @param input Input to hash and check against signature.
+ *
+ * @returns Returns 0 if signatures match, else 1.
+ */
+int hmac_verify(const string_t* key, const string_t* signature, const string_t* input);
+
+/**
+ * @brief Same as \ref hmac_verify but simply first concats key and salt to one key.
+ *
+ * @param key Key used to create signature.
+ * @param salt Salt used alongside key.
+ * @param signature Expected signature hash.
+ * @param input Input to hash and check against signature.
+ *
+ * @returns Returns 0 if signatures match, else 1.
+ */
+int hmac_verify_salted(const string_t* key, const string_t* salt, const string_t* signature, const string_t* input);
+
 #if defined(__cplusplus)
 }
 #endif

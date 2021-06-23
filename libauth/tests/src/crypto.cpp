@@ -20,6 +20,7 @@
 
 #include "radicle/auth/types.h"
 #include "radicle/auth/crypto.h"
+#include "radicle/types/string.h"
 
 TEST(AuthCryptoTests, TestRandomBase64) {
 	string_t* buffer = NULL;
@@ -64,12 +65,16 @@ class AuthCryptoHmacTest: public ::testing::Test {
 		string_t* raw = NULL;
 		string_t* encoded = NULL;
 		string_t* key = NULL;
+		string_t* key_without_salt = NULL;
+		string_t* key_salt = NULL;
 		string_t* buffer = NULL;
 	protected:
 		void SetUp() override {
 			raw = string_from_literal("9G'E-cd?wr\"g<_],Cg;YS:NBeF%f.2(td!9\"<gC8aT+,J$W^QHnf$v2Ju?'s+6=]");
 			encoded = string_from_literal("49fbf1c7091b0d942a526d883327c017d9d858225468f17df0b6dff9dfaed530f35793eeb644012f910ad010c5bda78ccbd1a2089975b29582ce87eca9c67427");
 			key = string_from_literal("r'5)t]=e(ZKC$[)6LZ'5jt/m[EN<>9#xeySuutr/Fd7HG{5C,RZvJPexRssUseq\\");
+			key_without_salt = string_from_literal("r'5)t]=e(ZKC$[)6LZ'5jt/m[EN<>9#xeySuutr/Fd7HG{5C,RZvJPexRss");
+			key_salt = string_from_literal("Useq\\");
 		}
 
 		void TearDown() override {
@@ -81,10 +86,22 @@ class AuthCryptoHmacTest: public ::testing::Test {
 
 };
 
-TEST_F(AuthCryptoHmacTest, HmacTest) {
+TEST_F(AuthCryptoHmacTest, HmacSignTest) {
 	ASSERT_EQ(hmac_sign((unsigned char*)raw->ptr, raw->length, key, &buffer), 0);
 	EXPECT_EQ(buffer->length, strlen(buffer->ptr));
 	EXPECT_STREQ(buffer->ptr, encoded->ptr);
+}
+
+TEST_F(AuthCryptoHmacTest, HmacVerifySuccessTest) {
+	ASSERT_EQ(hmac_verify(key, encoded, raw), 0);
+}
+
+TEST_F(AuthCryptoHmacTest, HmacVerifyFailTest) {
+	ASSERT_EQ(hmac_verify(key, encoded, encoded), 1);
+}
+
+TEST_F(AuthCryptoHmacTest, HmacVerifySaltedTest) {
+	ASSERT_EQ(hmac_verify_salted(key_without_salt, key_salt, encoded, raw), 0);
 }
 
 class AuthCryptoCookieTest: public ::testing::Test {
