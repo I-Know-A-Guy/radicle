@@ -21,6 +21,7 @@
  * @brief Contains all tests associated to auth.h
  * @author Nils Egger
  * @todo Missing tests which assure that functions return correctly if wrong account combinations, account is not verified or etc are given.
+ * @todo Implement these as integration tests.
  */
 
 #include <string.h>
