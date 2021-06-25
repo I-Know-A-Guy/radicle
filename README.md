@@ -9,6 +9,7 @@ Radicle offers:
  - Authentication and sessions using cookies
 
 ## [Documentation](https://radicle-docs.netlify.app/index.html)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/f702492b-49ca-4d82-9e3e-5dbd9690a0e4/deploy-status)](https://app.netlify.com/sites/radicle-docs/deploys)
 
 ## Installing
 
