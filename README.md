@@ -8,10 +8,7 @@ Radicle offers:
  - High level [libpq](https://www.postgresql.org/docs/current/libpq.html) bindings
  - Authentication and sessions using cookies
 
-## Documentation
-Currently there is no online documentation.
-Simply download the repository and run `doxygen Doxyfile` in the root directory.
-This will lead to a docs folder containing the complete API reference.
+## [Documentation](https://radicle-docs.netlify.app/index.html)
 
 ## Installing
 
