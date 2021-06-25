@@ -53,7 +53,7 @@ TEST_F(RadicleAuthTests, TestSaveSessionAccess) {
 }
 
 TEST_F(RadicleAuthTests, TestGetAccountByEmail) {
-	install_fetch_complete_hook();
+	install_fetch_account_hook();
 	auth_account_t* queried = NULL;
 	ASSERT_EQ(auth_get_account_by_email(conn, common_string, &queried) ,0);
 	auth_account_free(&queried);

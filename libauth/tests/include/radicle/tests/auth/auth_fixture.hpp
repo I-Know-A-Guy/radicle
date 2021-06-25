@@ -67,7 +67,7 @@ int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t
  *
  * @returns Returns 0 and fills PGresult with a fake table.
  */
-int pgdb_fetch_param_fake_complete(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
+int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
 
 /**
@@ -156,8 +156,8 @@ class RadicleAuthTests: public RadicleTests {
 			return buf;
 		}
 
-		subhook_t install_fetch_complete_hook() {
-			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_complete, SUBHOOK_64BIT_OFFSET);
+		subhook_t install_fetch_account_hook() {
+			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_account, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

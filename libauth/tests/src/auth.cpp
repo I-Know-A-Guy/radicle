@@ -30,6 +30,7 @@
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/auth.h"
 
+/*
 TEST_F(RadicleAuthTests, TestAuthRegister) {
 	install_execute_param_always_success();
 	install_fetch_complete_hook();
@@ -39,6 +40,7 @@ TEST_F(RadicleAuthTests, TestAuthRegister) {
 	ASSERT_EQ(auth_register(conn, account, test_requester, common_string, &cookie), 0);
 	auth_cookie_free(&cookie);
 }
+*/
 
 /*
 TEST_F(RadicleAuthTests, TestRegisterAccount) {

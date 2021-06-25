@@ -125,11 +125,11 @@ int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t
 	return 0;
 }
 
-int pgdb_fetch_param_fake_complete(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
+int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
 	*result = pgdb_result_new(PQmakeEmptyPGresult(conn, PGRES_TUPLES_OK));
-	PGresAttDesc descs[8];
-	const char* columns[] = {"uuid", "email", "password", "role", "verified", "active", "created", "id"};
-	if(set_fake_columns_attributes((*result)->pg, descs, 8, columns)) {
+	PGresAttDesc descs[7];
+	const char* columns[] = {"uuid", "email", "password", "role", "verified", "active", "created"};
+	if(set_fake_columns_attributes((*result)->pg, descs, 7, columns)) {
 		PQclear((*result)->pg);
 		return 1;
 	}
@@ -158,10 +158,6 @@ int pgdb_fetch_param_fake_complete(PGconn* conn, const char* stmt, const pgdb_pa
 		return 1;
 	}
 	if(set_fake_int((*result)->pg, 0, 6, 1624020176)) {
-		PQclear((*result)->pg);
-		return 1;
-	}
-	if(set_fake_int((*result)->pg, 0, 7, 1)) {
 		PQclear((*result)->pg);
 		return 1;
 	}

@@ -82,6 +82,8 @@ class AuthCryptoHmacTest: public ::testing::Test {
 			string_free(&encoded);
 			string_free(&key);
 			string_free(&buffer);
+			string_free(&key_salt);
+			string_free(&key_without_salt);
 		}
 
 };
