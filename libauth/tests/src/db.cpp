@@ -49,7 +49,7 @@ TEST_F(RadicleAuthTests, TestSaveSession) {
 TEST_F(RadicleAuthTests, TestSaveSessionAccess) {
 	install_execute_param_always_success();
 	uint32_t session_id = 1;
-	ASSERT_EQ(auth_save_session_access(conn, session_id, test_requester), 0);
+	ASSERT_EQ(auth_save_session_access(conn, session_id, test_requester, common_string), 0);
 }
 
 TEST_F(RadicleAuthTests, TestGetAccountByEmail) {

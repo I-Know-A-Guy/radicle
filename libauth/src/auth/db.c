@@ -69,7 +69,9 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 
 	const char* stmt = "INSERT INTO Sessions(owner, token, created, expires, revoked, salt) VALUES($1::uuid, $2::text, now(), $3::timestamp, FALSE, $4::text) RETURNING id;";
 	pgdb_params_t* params = pgdb_params_new(4);
-	pgdb_bind_uuid(owner, 0, params);
+	if(owner != NULL) {
+		pgdb_bind_uuid(owner, 0, params);
+	}
 	pgdb_bind_text(token, 1, params);
 	pgdb_bind_int32(expires, 2, params);
 	pgdb_bind_text(salt, 3, params);
@@ -93,13 +95,14 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 	return 0;
 }
 
-int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester) {
-	const char* stmt = "INSERT INTO SessionAccesses(session_id, requester, url, date) VALUES($1::int4, $2::text, $3::text, now());";
-	pgdb_params_t* params = pgdb_params_new (3);
+int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const string_t* status) {
+	const char* stmt = "INSERT INTO SessionAccesses(session_id, requester, url, status, date) VALUES($1::int4, $2::text, $3::text, $4::text, now());";
+	pgdb_params_t* params = pgdb_params_new (4);
 
 	pgdb_bind_int32(session_id, 0, params);
 	pgdb_bind_text(requester->ip, 1, params);
 	pgdb_bind_text(requester->path, 2, params);
+	pgdb_bind_text(status, 3, params);
 
 	if(pgdb_execute_param(conn, stmt, params)) {
 		DEBUG("Failed to insert session access.\n");
@@ -139,9 +142,9 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 	return 0;
 }
 
-int auth_get_account_by_session_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account) {
+int auth_get_session_by_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account) {
 	const char* stmt = "SELECT Sessions.id, Session.salt, Accounts.uuid, Accounts.email, Accounts.role, Accounts.verified, Accounts.active, Accounts.created" \
-			   " FROM Sessions JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
+			   " FROM Sessions LEFT JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
 			   " revoked=FALSE AND expires<$2 LIMIT 1";
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(cookie->token, 0, params);
@@ -160,14 +163,16 @@ int auth_get_account_by_session_cookie(PGconn* conn, const auth_cookie_t* cookie
 		pgdb_get_uint32(result, 0, "Sessions.id", &(*session)->id);
 		pgdb_get_text(result, 0, "Sessions.salt", &(*session)->salt);
 
-		*account  = calloc(1, sizeof(auth_account_t));
-		pgdb_get_uuid(result, 0, "Accounts.uuid", &(*account)->uuid);
-		pgdb_get_text(result, 0, "Accounts.email", &(*account)->email);
-		pgdb_get_text(result, 0, "Accounts.password", &(*account)->password);
-		pgdb_get_text(result, 0, "Accounts.role", &(*account)->role);
-		pgdb_get_bool(result, 0, "Accounts.verified", &(*account)->verified);
-		pgdb_get_bool(result, 0, "Accounts.active", &(*account)->active);
-		pgdb_get_timestamp(result, 0, "Accounts.created", &(*account)->created);
+		if(pgdb_exists(result, "Accounts.uuid", 0)) {
+			*account  = calloc(1, sizeof(auth_account_t));
+			pgdb_get_uuid(result, 0, "Accounts.uuid", &(*account)->uuid);
+			pgdb_get_text(result, 0, "Accounts.email", &(*account)->email);
+			pgdb_get_text(result, 0, "Accounts.password", &(*account)->password);
+			pgdb_get_text(result, 0, "Accounts.role", &(*account)->role);
+			pgdb_get_bool(result, 0, "Accounts.verified", &(*account)->verified);
+			pgdb_get_bool(result, 0, "Accounts.active", &(*account)->active);
+			pgdb_get_timestamp(result, 0, "Accounts.created", &(*account)->created);
+		}
 	}
 
 	pgdb_result_free(&result);

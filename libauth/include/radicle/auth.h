@@ -51,6 +51,46 @@ enum {
 };
 
 /**
+ * @brief Creates a owned session and saves it to the database.
+ * @todo test
+ *
+ * @param conn Connection to database.
+ * @param uuid Uuid of owner account.
+ * @param signature_key Key used for signing cookie.
+ * @param cookie Pointer to cookie whihc will be created by this function.
+ * @param id Identifier of session row.
+ *
+ * @returns Returns 0 for success.
+ */
+int auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
+
+/**
+ * @brief Creates a session which is not associated to any account.
+ * @todo test
+ *
+ * @param conn Connection to database.
+ * @param signature_key Key used for signing cookie.
+ * @param cookie Pointer to cookie whihc will be created by this function.
+ * @param id Identifier of session row.
+ *
+ * @returns Returns 0 for success.
+ */
+int auth_make_free_session(PGconn* conn, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
+
+/**
+ * @brief Logs a session access with its corresponding status.
+ * @todo test
+ *
+ * @param conn Connedtion to database
+ * @param session_id Identifier of owning session.
+ * @param requester Network requester.
+ * @param status Status to be logged. Example: invalid_login
+ *
+ * @returns Returns 0 for success.
+ */
+int auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status);
+
+/**
  * @brief Registers account and creates a session.
  * @todo Must send a verification email.
  *
@@ -90,7 +130,6 @@ int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password,
 	       	const auth_requester_t* requester, const string_t* signature_key,
 		auth_account_t** account, auth_cookie_t** cookie);
 
-
 /**
  * @brief Checks if received cookie has a valid signature and exists in database.
  * If it exists, it also checks for expiration or if it has been manually revoked.
@@ -99,11 +138,12 @@ int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password,
  * @param conn Connection to database.
  * @param cookie Raw textual cookie representation.
  * @param requester Auth network requester. Used for anti spam measures.
- * @param account Pointer to account which will be set if cookie is valid.
+ * @param session Session which correlates to the given token in cookie. 
+ * @param account Pointer to account which will be set if cookie is valid and has a owner.
  *
  * @returns Returns 0 on success.
  */
-int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_account_t** account);
+int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account);
 
 #if defined(__cplusplus)
 }

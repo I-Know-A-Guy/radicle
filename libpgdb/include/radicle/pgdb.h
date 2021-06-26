@@ -292,6 +292,17 @@ int pgdb_get_timestamp(const pgdb_result_t* result, const int row, const char* f
  */
 int pgdb_get_uuid(const pgdb_result_t* result, const int row, const char* field, uuid_t** uuid);
 
+/**
+ * @brief Checks if a column is given and field is not NULL.
+ *
+ * @param result \ref pgdb_params_t containing query result.
+ * @param name Name of columns
+ * @param row Row of value.
+ *
+ * @returns True if column exists.
+ */
+bool pgdb_exists(const pgdb_result_t* result, const char* name, const int row);
+
 #if defined(__cplusplus)
 }
 #endif

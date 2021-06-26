@@ -26,6 +26,34 @@
 #include "radicle/auth/db.h"
 #include "radicle/auth.h"
 
+int auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id) {
+	if(auth_generate_session_cookie(signature_key, cookie)) {
+		DEBUG("Failed to  generate cookie for session.\n");
+		return 1;
+	}
+
+	if(auth_save_session(conn, uuid, (*cookie)->token, time(NULL) + SESSION_EXPIRE, (*cookie)->salt, id)) {
+		DEBUG("Failed to save session.\n");
+		auth_cookie_free(cookie);
+		return 1;
+	}
+	return 0;
+}
+
+int auth_make_free_session(PGconn* conn, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id) {
+	return auth_make_owned_session(conn, NULL, signature_key, cookie, id);
+}
+
+int auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status) {
+	string_t* s = string_from_literal(status);
+	if(auth_save_session_access(conn, session_id, requester, s)) {
+		string_free(&s);
+		return 1;
+	}
+	string_free(&s);
+	return 0;
+}
+
 int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* requester, const string_t* signature_key, auth_cookie_t** cookie) {
 
 	string_t* password_hash = NULL;
@@ -62,25 +90,6 @@ int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* reque
 		string_free(&registration_token);
 	}
 
-	if(auth_generate_session_cookie(signature_key, cookie)) {
-		ERROR("Failed to  generate cookie for session.\n");
-		uuid_free(&account->uuid);
-		return 1;
-	}
-
-	if(auth_save_session(conn, account->uuid, (*cookie)->token, time(NULL) + SESSION_EXPIRE, (*cookie)->salt, &session_id)) {
-		ERROR("Failed to save session.\n");
-		uuid_free(&account->uuid);
-		auth_cookie_free(cookie);
-		return 1;
-	}
-
-	if(auth_save_session_access(conn, session_id, requester)) {
-		uuid_free(&account->uuid);
-		auth_cookie_free(cookie);
-		return 1;
-	}
-
 	return 0;
 }
 
@@ -115,55 +124,27 @@ int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password,
 		return AUTH_FAILED_VERIFY_PASSWORD;
 	}
 
-	if(auth_generate_session_cookie(signature_key, cookie)) {
-		auth_account_free(account);
-		return AUTH_FAILED_TO_GENERATE_COOKIE;
-	}
-	
-	uint32_t session_row_id;
-	if(auth_save_session(conn, (*account)->uuid, (*cookie)->token, time(NULL) + SESSION_EXPIRE, (*cookie)->salt, &session_row_id)) {
-		auth_account_free(account);
-		auth_cookie_free(cookie);
-		return AUTH_FAILED_TO_SAVE_SESSION;
-	}
-
-	if(auth_save_session_access(conn, session_row_id, requester)) {
-		auth_account_free(account);
-		auth_cookie_free(cookie);
-		return AUTH_FAILED_TO_SAVE_SESSION_ACCESS;
-	}
-
 	return AUTH_OK;
 }
 
-int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_account_t** account) {
+int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account) {
 	
 	auth_cookie_t* cookie_result;
 	if(auth_split_cookie(cookie, &cookie_result)) {
 		return 1;
 	}
 
-	auth_session_t* session = NULL;
-	if(auth_get_account_by_session_cookie(conn, cookie_result, &session, account)) {
+	if(auth_get_session_by_cookie(conn, cookie_result, session, account)) {
 		auth_cookie_free(&cookie_result);
 		return 1;
 	}
 
-	if(auth_save_session_access(conn, session->id, requester)) {
+	if(hmac_verify_salted(signature_key, (*session)->salt, cookie_result->signature, cookie_result->token)) {
 		auth_cookie_free(&cookie_result);
-		auth_session_free(&session);
-		auth_account_free(account);
-		return AUTH_FAILED_TO_SAVE_SESSION_ACCESS;
-	}
-
-	if(hmac_verify_salted(signature_key, session->salt, cookie_result->signature, cookie_result->token)) {
-		auth_cookie_free(&cookie_result);
-		auth_session_free(&session);
 		auth_account_free(account);
 		return 1;
 	}
 	auth_cookie_free(&cookie_result);
-	auth_session_free(&session);
 
 	if(*account == NULL) {
 		return 1;

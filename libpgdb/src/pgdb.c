@@ -245,3 +245,8 @@ int pgdb_get_uuid(const pgdb_result_t* result, const int row, const char* field,
 	*buf = uuid_new((unsigned char*)PQgetvalue(result->pg, row, column));
 	return 0;
 }
+
+bool pgdb_exists(const pgdb_result_t* result, const char* name, const int row) {
+	int column = PQfnumber(result->pg, name);
+	return column != -1 && !PQgetisnull(result->pg, row, column);
+}

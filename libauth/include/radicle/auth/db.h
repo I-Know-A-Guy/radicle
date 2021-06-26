@@ -70,7 +70,7 @@ int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* tok
  * @brief Saves session to database and returns its row id.
  *
  * @param conn Connection to database.
- * @param owner Owner uuid of session.
+ * @param owner Owner uuid of session. Can be null.
  * @param token Generated session id which will be included in cookie.
  * @param salt Salt used to sign token. (Session id included in cookie.)
  * @param id Returned row id of session.
@@ -86,10 +86,11 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
  * @param conn Connection to database.
  * @param session_id Row id of session.
  * @param requester Network requester.
+ * @param status Status to remember access by. Example: invalid_login
  *
  * @returns Returns 0 on success.
  */
-int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester);
+int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const string_t* status);
 
 /**
  * @brief Retrieves account matching email, if none is found, \p account stays NULL.
@@ -113,7 +114,7 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
  * 
  * @returns Returns 0 on success.
  */
-int auth_get_account_by_session_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account);
+int auth_get_session_by_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account);
 
 #if defined(__cplusplus)
 }
