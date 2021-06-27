@@ -142,12 +142,12 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 	return 0;
 }
 
-int auth_get_session_by_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_session_t** session, auth_account_t** account) {
+int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_session_t** session, auth_account_t** account) {
 	const char* stmt = "SELECT Sessions.id, Session.salt, Accounts.uuid, Accounts.email, Accounts.role, Accounts.verified, Accounts.active, Accounts.created" \
 			   " FROM Sessions LEFT JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
 			   " revoked=FALSE AND expires<$2 LIMIT 1";
 	pgdb_params_t* params = pgdb_params_new(2);
-	pgdb_bind_text(cookie->token, 0, params);
+	pgdb_bind_text(cookie, 0, params);
 	pgdb_bind_int32(time(NULL), 1, params);
 
 	pgdb_result_t* result = NULL;
@@ -160,19 +160,21 @@ int auth_get_session_by_cookie(PGconn* conn, const auth_cookie_t* cookie, auth_s
 
 	if(PQntuples(result->pg) == 1) {
 		*session = auth_session_new();
-		pgdb_get_uint32(result, 0, "Sessions.id", &(*session)->id);
-		pgdb_get_text(result, 0, "Sessions.salt", &(*session)->salt);
+		pgdb_get_uint32(result, 0, "id", &(*session)->id);
+		pgdb_get_text(result, 0, "salt", &(*session)->salt);
 
-		if(pgdb_exists(result, "Accounts.uuid", 0)) {
+		if(pgdb_exists(result, "uuid", 0)) {
 			*account  = calloc(1, sizeof(auth_account_t));
-			pgdb_get_uuid(result, 0, "Accounts.uuid", &(*account)->uuid);
-			pgdb_get_text(result, 0, "Accounts.email", &(*account)->email);
-			pgdb_get_text(result, 0, "Accounts.password", &(*account)->password);
-			pgdb_get_text(result, 0, "Accounts.role", &(*account)->role);
-			pgdb_get_bool(result, 0, "Accounts.verified", &(*account)->verified);
-			pgdb_get_bool(result, 0, "Accounts.active", &(*account)->active);
-			pgdb_get_timestamp(result, 0, "Accounts.created", &(*account)->created);
+			pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid);
+			pgdb_get_text(result, 0, "email", &(*account)->email);
+			pgdb_get_text(result, 0, "password", &(*account)->password);
+			pgdb_get_text(result, 0, "role", &(*account)->role);
+			pgdb_get_bool(result, 0, "verified", &(*account)->verified);
+			pgdb_get_bool(result, 0, "active", &(*account)->active);
+			pgdb_get_timestamp(result, 0, "created", &(*account)->created);
 		}
+	} else {
+		DEBUG("No rows for session\n");
 	}
 
 	pgdb_result_free(&result);

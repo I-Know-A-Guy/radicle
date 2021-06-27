@@ -63,12 +63,18 @@ int pgdb_fetch_param_fake_uuid(PGconn* conn, const char* stmt, const pgdb_params
 int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
 /**
- * @brief Fake function which returns every possible column. 
+ * @brief Fake function which returns every possible column of a account. 
  *
  * @returns Returns 0 and fills PGresult with a fake table.
  */
 int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
+/**
+ * @brief Fake function which returns every column of a owned session. 
+ *
+ * @returns Returns 0 and fills PGresult with a fake table.
+ */
+int pgdb_fetch_param_fake_owned_session(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
 /**
  * @brief Generates a fixed random base64.
@@ -158,6 +164,12 @@ class RadicleAuthTests: public RadicleTests {
 
 		subhook_t install_fetch_account_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_account, SUBHOOK_64BIT_OFFSET);
+			install_hook(buf);
+			return buf;
+		}
+
+		subhook_t install_fetch_session_hook() {
+			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_owned_session, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

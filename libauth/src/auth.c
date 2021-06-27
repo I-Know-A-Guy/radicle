@@ -134,7 +134,7 @@ int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string
 		return 1;
 	}
 
-	if(auth_get_session_by_cookie(conn, cookie_result, session, account)) {
+	if(auth_get_session_by_cookie(conn, cookie_result->token, session, account)) {
 		auth_cookie_free(&cookie_result);
 		return 1;
 	}

@@ -164,6 +164,53 @@ int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_par
 	return 0;
 }
 
+int pgdb_fetch_param_fake_owned_session(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
+	*result = pgdb_result_new(PQmakeEmptyPGresult(conn, PGRES_TUPLES_OK));
+	PGresAttDesc descs[9];
+	const char* columns[] = {"id", "salt", "uuid", "email", "password", "role", "verified", "active", "created"};
+	if(set_fake_columns_attributes((*result)->pg, descs, 9, columns)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_int((*result)->pg, 0, 0, 1)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_text((*result)->pg, 0, 1)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_uuid((*result)->pg, 0, 2)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_text((*result)->pg, 0, 3)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_text((*result)->pg, 0, 4)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_text((*result)->pg, 0, 5)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_bool((*result)->pg, 0, 6, true)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_bool((*result)->pg, 0, 7, true)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_int((*result)->pg, 0, 8, 1624020176)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	return 0;
+}
+
 int auth_generate_random_base64_fake(const int rand_bytes, string_t** buffer) {
 	*buffer = string_from_literal("fPtjd+zvvzMafpvYuJC10Q==");	
 	return 0;
