@@ -14,7 +14,7 @@ target_include_directories(
 
 # TODO if statement for either adding subhook_unix.c or subhook_windows.c depending on building platform
 add_library(
-	radicle_test_lib
+	radicle_common_testlib
 	STATIC
 	tests/src/subhook.c
 	tests/src/subhook_unix.c
@@ -22,7 +22,7 @@ add_library(
 )
 
 target_include_directories(
-	radicle_test_lib
+	radicle_common_testlib
 	PUBLIC	
        	${CMAKE_CURRENT_SOURCE_DIR}/tests/include
 )
@@ -36,7 +36,7 @@ add_executable(
 target_link_libraries(
 	"${PROJECT_NAME}_test"
 	${PROJECT_NAME}
-	radicle_test_lib
+	radicle_common_testlib
 	gtest_main
 )
 

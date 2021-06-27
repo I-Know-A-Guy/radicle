@@ -20,7 +20,6 @@
  * @file
  * @brief Contains RadicleAuthTests fixture for testing.
  * @author Nils Egger
- * @todo Move basic pgdb fake functions to a pgdb testing library
  * @addtogroup testing 
  * @{
  * @addtogroup auth_testing Auth Testing
@@ -37,30 +36,7 @@
 #include "radicle/auth/crypto.h"
 #include "radicle/auth/db.h"
 #include "radicle/auth.h"
-#include "radicle/tests/subhook.h"
-#include "radicle/tests/radicle_fixture.hpp"
-
-
-/**
- * @brief Fake function for pgdb_execute_param which simply returns success without doing anyhting.
- *
- * @returns Returns 0.
- */
-int pgdb_execute_param_fake(PGconn* conn, const char* stmt, const pgdb_params_t* params);
-
-/**
- * @brief Fake function for pgdb_fetch_param which should return an uuid.
- *
- * @returns Returns 0 and sets fills result with a single row containing a NILL uuid.
- */
-int pgdb_fetch_param_fake_uuid(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
-
-/**
- * @brief Fake function for pgdb_fetch_param which should return an id.
- *
- * @returns Returns 0 and sets fills result with a single row containing a column called id with value set to 1.
- */
-int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
+#include "radicle/tests/pgdb_hooks.hpp"
 
 /**
  * @brief Fake function which returns every possible column of a account. 
@@ -108,7 +84,7 @@ int hmac_sign_fake(const unsigned char* input, const size_t input_length, const 
  * @brief Class for tests which use any of the Auth functions.
  * @todo add documentation for ownerships.
  */
-class RadicleAuthTests: public RadicleTests {
+class RadicleAuthTests: public RadiclePGDBHooks {
 
 	std::vector<auth_account_t*> accounts;
 	std::vector<auth_cookie_t*> cookies;
@@ -150,18 +126,6 @@ class RadicleAuthTests: public RadicleTests {
 			return buf;
 		}
 
-		subhook_t install_fetch_uuid_hook() {
-			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_uuid, SUBHOOK_64BIT_OFFSET);
-			install_hook(buf);
-			return buf;
-		}
-
-		subhook_t install_fetch_id_hook() {
-			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_id, SUBHOOK_64BIT_OFFSET);
-			install_hook(buf);
-			return buf;
-		}
-
 		subhook_t install_fetch_account_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_account, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
@@ -170,12 +134,6 @@ class RadicleAuthTests: public RadicleTests {
 
 		subhook_t install_fetch_session_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_owned_session, SUBHOOK_64BIT_OFFSET);
-			install_hook(buf);
-			return buf;
-		}
-
-		subhook_t install_execute_param_always_success() {
-			subhook_t buf = subhook_new((void*)pgdb_execute_param, (void*)pgdb_execute_param_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

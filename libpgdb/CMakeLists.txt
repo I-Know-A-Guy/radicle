@@ -27,6 +27,25 @@ target_link_libraries(
 	radicle_common
 )
 
+add_library(
+	radicle_pgdb_testlib
+	STATIC
+	tests/src/pgdb_hooks.cpp
+)
+
+target_include_directories(
+	radicle_pgdb_testlib
+	PUBLIC	
+       	${CMAKE_CURRENT_SOURCE_DIR}/tests/include
+)
+
+target_link_libraries(
+	radicle_pgdb_testlib
+	gtest
+	${PROJECT_NAME}
+	radicle_common_testlib
+)
+
 add_executable(
 	"${PROJECT_NAME}_test"
 	tests/src/pgdb.cpp

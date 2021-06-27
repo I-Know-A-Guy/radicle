@@ -56,7 +56,8 @@ target_include_directories(
 target_link_libraries(
 	${PROJECT_NAME}_test
 	${PROJECT_NAME}
-	radicle_test_lib
+	radicle_common_testlib
+	radicle_pgdb_testlib
 	gtest_main
 )
 
