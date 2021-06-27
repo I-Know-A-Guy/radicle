@@ -81,7 +81,6 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 
 /**
  * @brief Saves session access to database.
- * @todo Add status like, login, failed_login, invalid_signature etc.
  *
  * @param conn Connection to database.
  * @param session_id Row id of session.

@@ -20,6 +20,9 @@
  * @file
  * @brief Contains functions for register, sigining in and logging out a user. 
  * @author Nils Egger
+ *
+ * @todo Function for sending verification emails.
+ *
  * @addtogroup Auth
  * @{
  */
@@ -92,7 +95,6 @@ int auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requeste
 
 /**
  * @brief Registers account and creates a session.
- * @todo Must send a verification email.
  *
  * @param conn connection to database.
  * @param account Account which will be created. 

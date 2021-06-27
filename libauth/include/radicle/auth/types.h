@@ -80,7 +80,6 @@ void auth_account_free(auth_account_t** account);
 
 /**
  * @brief Network Requester representation. Used for spam and misuse filtering.
- * @todo Create type for ip 'INET' which is compatible with postgres.
  *
  * @see auth_requester_new()
  * @see auth_requester_free()
