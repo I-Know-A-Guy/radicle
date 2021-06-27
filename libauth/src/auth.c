@@ -54,7 +54,7 @@ auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const aut
 	return AUTH_OK;
 }
 
-auth_errors_t auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* requester, const string_t* signature_key, auth_cookie_t** cookie) {
+auth_errors_t auth_register(PGconn* conn, auth_account_t* account) {
 
 	string_t* password_hash = NULL;
 	uint32_t session_id = 0;
@@ -70,24 +70,6 @@ auth_errors_t auth_register(PGconn* conn, auth_account_t* account, auth_requeste
 	if(auth_save_account(conn, account, &account->uuid)) {
 		DEBUG("Failed to save account.\n");
 		return AUTH_ERROR;
-	}
-
-	if(!account->verified) {
-		string_t* registration_token = NULL;
-
-		if(auth_generate_random_base64(256, &registration_token)) {
-			ERROR("Failed to generate registration token.\n");
-			uuid_free(&account->uuid);
-			return AUTH_ERROR;
-		}
-
-		if(auth_save_registration(conn, account->uuid, registration_token)) {
-			ERROR("Failed to save registration.\n");
-			string_free(&registration_token);
-			uuid_free(&account->uuid);
-			return AUTH_ERROR;
-		}
-		string_free(&registration_token);
 	}
 
 	return AUTH_OK;
@@ -126,7 +108,7 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 	return AUTH_OK;
 }
 
-auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account) {
+auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, auth_session_t** session, auth_account_t** account) {
 	
 	auth_cookie_t* cookie_result;
 	if(auth_split_cookie(cookie, &cookie_result)) {

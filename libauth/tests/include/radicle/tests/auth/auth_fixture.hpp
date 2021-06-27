@@ -88,24 +88,26 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 
 	std::vector<auth_account_t*> accounts;
 	std::vector<auth_cookie_t*> cookies;
+	std::vector<auth_session_t*> sessions;
 
 	protected:
-		PGconn* conn;
+		PGconn* conn = NULL;
 		auth_requester_t* test_requester;
 
 		void SetUp() override {
-			conn = PQconnectdb("host=localhost port=5432 dbname=mydb connect_timeout=10");
 			test_requester = auth_requester_newl("127.0.0.1", "/i/am/a/test");
 			RadicleTests::SetUp();
 		}
 
 		void TearDown() override {
-			PQfinish(conn);
 			for(std::vector<auth_account_t*>::iterator iter = accounts.begin(); iter != accounts.end(); iter++) {
 				auth_account_free(iter.base());
 			}
 			for(std::vector<auth_cookie_t*>::iterator iter = cookies.begin(); iter != cookies.end(); iter++) {
 				auth_cookie_free(iter.base());
+			}
+			for(std::vector<auth_session_t*>::iterator iter = sessions.begin(); iter != sessions.end(); iter++) {
+				auth_session_free(iter.base());
 			}
 			auth_requester_free(&test_requester);
 			RadicleTests::TearDown();
@@ -124,6 +126,36 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 				       	0);
 			accounts.push_back(buf);
 			return buf;
+		}
+
+		/**
+		 * @brief Takes ownership of account and frees it on TearDown()
+		 *
+		 * @param account Pointer to account to take ownership of.
+		 */
+		void take_account(auth_account_t* account) {
+			if(account == NULL) return;
+			accounts.push_back(account);
+		}
+
+		/**
+		 * @brief Takes ownership of cookie and frees it on TearDown()
+		 *
+		 * @param cookie Pointer to cookie to take ownership of.
+		 */
+		void take_cookie(auth_cookie_t* cookie) {
+			if(cookie == NULL) return;
+			cookies.push_back(cookie);
+		}
+
+		/**
+		 * @brief Takes ownership of session and frees it on TearDown()
+		 *
+		 * @param session Pointer to session to take ownership of.
+		 */
+		void take_session(auth_session_t* session) {
+			if(session == NULL) return;
+			sessions.push_back(session);
 		}
 
 		subhook_t install_fetch_account_hook() {
@@ -147,6 +179,31 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			install_hook(subhook_new((void*)auth_verify_password, (void*)auth_verify_password_fake, SUBHOOK_64BIT_OFFSET));	
 			install_hook(subhook_new((void*)hmac_sign, (void*)hmac_sign_fake, SUBHOOK_64BIT_OFFSET));	
 		}
+};
+
+class RadicleConnectedAuthTests: public RadicleAuthTests {
+
+	protected:
+
+		static void SetUpTestSuite() {
+			const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
+			PGconn* temp_conn;
+			ASSERT_EQ(pgdb_connect(conninfo, &temp_conn), 0);
+			EXPECT_EQ(auth_create_db_tables(temp_conn), 0);
+			PQfinish(temp_conn);
+		}
+
+		void SetUp() override {
+			RadicleAuthTests::SetUp();
+			const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
+			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
+		}
+
+		void TearDown() override {
+			RadicleAuthTests::TearDown();
+			PQfinish(conn);
+		}
+
 };
 
 /** @} */

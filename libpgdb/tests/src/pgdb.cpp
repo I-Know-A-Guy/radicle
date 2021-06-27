@@ -36,7 +36,7 @@ class PGDBTest: public ::testing::Test {
 		 * Like started transactions which havent been commited.
 		 */
 		void SetUp() override {
-			ASSERT_EQ(pqdb_connect(conninfo, &conn), 0);
+			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
 		}
 
 		void TearDown() override {
@@ -51,7 +51,7 @@ TEST_F(PGDBTest, TestFixtureSetup) {
 
 TEST_F(PGDBTest, TestPingInfo) {
 	PGPing status;
-	const char* info = pqdb_ping_info(conninfo, &status);
+	const char* info = pgdb_ping_info(conninfo, &status);
 	ASSERT_EQ(status, PQPING_OK) << info;
 }
 

@@ -72,6 +72,7 @@ session_id INT NOT NULL,\
 requester TEXT NOT NULL,\
 url TEXT NOT NULL,\
 date TIMESTAMP NOT NULL,\
+status TEXT NOT NULL,\
 FOREIGN KEY (session_id) REFERENCES Sessions(id)\
 );";
 

@@ -21,7 +21,7 @@
  * @brief Contains all tests associated to auth.h
  * @author Nils Egger
  * @todo Missing tests which assure that functions return correctly if wrong account combinations, account is not verified or etc are given.
- * @todo Implement these as integration tests.
+ * @todo Fix integration test which fails on auth_save_session because timestamp binary is not readable by postgresql.
  */
 
 #include <string.h>
@@ -31,55 +31,45 @@
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/auth.h"
 
-/*
-TEST_F(RadicleAuthTests, TestAuthRegister) {
-	install_execute_param_always_success();
-	install_fetch_complete_hook();
-	install_crypto_hooks();
-	auth_account_t* account = manage_account("TestRegisterAccount", "asdf", "user", false);
-	auth_cookie_t* cookie = NULL;
-	ASSERT_EQ(auth_register(conn, account, test_requester, common_string, &cookie), 0);
-	auth_cookie_free(&cookie);
+TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
+	string_t* email = manage_string("test-user@radicle.com");
+	string_t* password = manage_string("12345678");
+	auth_account_t* account = manage_account(email->ptr, password->ptr, "user", true);
+	ASSERT_EQ(auth_register(conn, account), AUTH_OK);
+	ASSERT_TRUE(account->uuid != NULL);
+
+	auth_cookie_t* register_cookie = NULL;
+	string_t* key = manage_string("secret-key!");
+	uint32_t session_id = 0;
+	ASSERT_EQ(auth_make_owned_session(conn, account->uuid, key, &register_cookie, &session_id), AUTH_OK);
+	take_cookie(register_cookie);
+
+	ASSERT_EQ(auth_log_access(conn, session_id, test_requester, "register"), AUTH_OK);
+
+	auth_account_t* signed_in_account = NULL;
+	ASSERT_EQ(auth_sign_in(conn, email, password, &signed_in_account), AUTH_OK);
+	take_account(signed_in_account);
+	ASSERT_TRUE(signed_in_account != NULL);
+
+	EXPECT_EQ(memcmp(account->uuid->bin, signed_in_account->uuid->bin, 16), 0);
+
+	auth_cookie_t* signed_in_cookie = NULL;
+	ASSERT_EQ(auth_make_owned_session(conn, signed_in_account->uuid, key, &signed_in_cookie, &session_id), AUTH_OK);
+	take_cookie(signed_in_cookie);
+	ASSERT_TRUE(signed_in_cookie != NULL);
+
+	ASSERT_EQ(auth_log_access(conn, session_id, test_requester, "credentials-sign-in"), AUTH_OK);
+	
+	auth_session_t* cookie_session = NULL;
+	auth_account_t* cookie_account = NULL;
+	ASSERT_EQ(auth_verify_cookie(conn, key, signed_in_cookie->cookie, &cookie_session, &cookie_account), AUTH_OK) << signed_in_cookie->token->ptr;
+	take_session(cookie_session);
+	take_account(cookie_account);
+
+	ASSERT_TRUE(cookie_session != NULL);
+	ASSERT_TRUE(cookie_account != NULL);
+
+	EXPECT_EQ(memcmp(account->uuid->bin, cookie_account->uuid->bin, 16), 0);
+
+	ASSERT_EQ(auth_log_access(conn, cookie_session->id, test_requester, "cookie-sign-in"), AUTH_OK);
 }
-*/
-
-/*
-TEST_F(RadicleAuthTests, TestRegisterAccount) {
-	string_t* key = manage_string("this is my secure key.");
-	auth_account_t* account = manage_account("TestRegisterAccount", "asdf", "user", false);
-	auth_cookie_t* cookie = NULL;
-
-	ASSERT_EQ(auth_register(conn, account, test_requester, key, &cookie), 0);
-
-	EXPECT_TRUE(*account->uuid->bin != 0);
-	test_string_len(cookie->cookie);
-	test_string_len(cookie->token);
-	test_string_len(cookie->signature);
-
-	auth_cookie_free(&cookie);
-}
-
-TEST_F(RadicleAuthTests, TestSignIn) {
-	string_t* key = manage_string("this is my secure key.");
-	string_t* email = manage_string("TestSignIn");
-	string_t* password = manage_string("password");
-	auth_account_t* account;
-	auth_cookie_t* cookie = NULL;
-
-	register_test_account(email->ptr, password->ptr, true, key, &account, &cookie);
-
-	auth_account_t* logged;
-	auth_cookie_t* logged_cookie;
-	ASSERT_EQ(auth_sign_in(conn, email, password, test_requester, key, &logged, &logged_cookie), 0);
-
-	EXPECT_EQ(memcmp(logged->uuid->bin, account->uuid->bin, 16), 0);
-	EXPECT_STREQ(logged->role->ptr, "user");
-	EXPECT_EQ(logged->verified, true);
-
-	auth_account_free(&logged);
-	auth_cookie_free(&logged_cookie);
-}
-
-*/
-
-

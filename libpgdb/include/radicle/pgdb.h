@@ -21,6 +21,8 @@
  * @brief Header file containing all functions related to low level database manipulation.
  * @author Nils Egger
  *
+ * @todo Create pgdb_bind_timestamp which converts timestap to valid ISO timestamp string.
+ *
  * @addtogroup pgdb
  * @{
  */
@@ -40,6 +42,10 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
+
+/* https://stackoverflow.com/a/28592202 */
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 /**
  * @brief Represents SQL parameters which will be bound to a query.
@@ -110,7 +116,7 @@ void pgdb_result_free(pgdb_result_t** result);
  *
  * @returns 0 on success
  */
-int pqdb_connect(const char* conninfo, PGconn** connection);
+int pgdb_connect(const char* conninfo, PGconn** connection);
 
 /**
  * @brief Pings the database server to make sure it is running and returns the status as text.
@@ -125,7 +131,7 @@ int pqdb_connect(const char* conninfo, PGconn** connection);
  * @retval PQPING_NO_RESPONSE The server could not be contacted. This might indicate that the server is not running, or that there is something wrong with the given connection parameters (for example, wrong port number), or that there is a network connectivity problem (for example, a firewall blocking the connection request).
  * @retval PQPING_NO_ATTEMPT No attempt was made to contact the server, because the supplied parameters were obviously incorrect or there was some client-side problem (for example, out of memory).
  */
-const char* pqdb_ping_info(const char* conninfo, PGPing* status);
+const char* pgdb_ping_info(const char* conninfo, PGPing* status);
 
 /**
  * @brief Sends query to database. Does not expect data to be returned, if it does, an error will be returned.
@@ -189,6 +195,7 @@ int pgdb_transaction_rollback(PGconn* conn);
 
 /**
  * @brief Binds int32 to query.
+ * @todo change to uint32_t
  *
  * @param value Value to bind. 
  * @param index Index to use in arrays.
@@ -197,6 +204,17 @@ int pgdb_transaction_rollback(PGconn* conn);
  * @returns Returns void.
  */
 void pgdb_bind_int32(const int value, const int index, pgdb_params_t* params);
+
+/**
+ * @brief Binds timestamp to query.
+ *
+ * @param value Value to bind. 
+ * @param index Index to use in arrays.
+ * @param param \ref pgdb_params_t struct to use for binding.
+ *
+ * @returns Returns void.
+ */
+void pgdb_bind_uint64(const uint64_t value, const int index, pgdb_params_t* params);
 
 /**
  * @brief Binds text to query.

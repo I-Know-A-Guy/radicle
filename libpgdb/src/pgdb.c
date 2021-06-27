@@ -60,7 +60,7 @@ void pgdb_result_free(pgdb_result_t** result) {
 	*result = NULL;
 }
 
-int pqdb_connect(const char* conninfo, PGconn** connection) {
+int pgdb_connect(const char* conninfo, PGconn** connection) {
 	*connection = PQconnectdb(conninfo);
 	ConnStatusType status = PQstatus(*connection);
 
@@ -72,7 +72,7 @@ int pqdb_connect(const char* conninfo, PGconn** connection) {
 	return 0;
 }
 
-const char* pqdb_ping_info(const char* conninfo, PGPing* status) {
+const char* pgdb_ping_info(const char* conninfo, PGPing* status) {
 	*status = PQping(conninfo);	
 	switch(*status) {
 		case PQPING_OK:
@@ -170,6 +170,15 @@ void pgdb_bind_int32(int value, int index, pgdb_params_t* params) {
 
 	params->values[index] = (char*)buffer;
 	params->lengths[index] = sizeof(uint32_t);
+	params->formats[index] = 1;
+}
+
+void pgdb_bind_uint64(const uint64_t value, const int index, pgdb_params_t* params) {
+	uint32_t* buffer = malloc(sizeof(uint64_t));
+	*buffer = htonll((uint64_t)(value));
+
+	params->values[index] = (char*)buffer;
+	params->lengths[index] = sizeof(uint64_t);
 	params->formats[index] = 1;
 }
 

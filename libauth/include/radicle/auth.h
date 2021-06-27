@@ -55,7 +55,6 @@ typedef enum auth_errors {
 
 /**
  * @brief Creates a owned session and saves it to the database.
- * @todo test
  *
  * @param conn Connection to database.
  * @param uuid Uuid of owner account.
@@ -69,7 +68,6 @@ auth_errors_t auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const st
 
 /**
  * @brief Creates a session which is not associated to any account.
- * @todo test
  *
  * @param conn Connection to database.
  * @param signature_key Key used for signing cookie.
@@ -82,7 +80,6 @@ auth_errors_t auth_make_free_session(PGconn* conn, const string_t* signature_key
 
 /**
  * @brief Logs a session access with its corresponding status.
- * @todo test
  *
  * @param conn Connedtion to database
  * @param session_id Identifier of owning session.
@@ -98,16 +95,13 @@ auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const aut
  *
  * @param conn connection to database.
  * @param account Account which will be created. 
- * @param requester Network requester. Used for filtering spam and api misuse.
- * @param signature_key Key which will be used for signing the session cookie.
- * @param cookie Pointer to \ref auth_cookie_t which will be created.
  *
  * @returns \ref auth_account_t.uuid will be set by function.
  * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  *
  * @pre \ref account_param_t.email, \ref account_param_t.password, \ref account_param_t.role, \ref account_param_t.verified must be set.
  */
-auth_errors_t auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* requester, const string_t* signature_key, auth_cookie_t** cookie);
+auth_errors_t auth_register(PGconn* conn, auth_account_t* account);
 
 /**
  * @brief Tries to sign in using the given email and password combination. 
@@ -132,11 +126,9 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 /**
  * @brief Checks if received cookie has a valid signature and exists in database.
  * If it exists, it also checks for expiration or if it has been manually revoked.
- * @todo write test
  *
  * @param conn Connection to database.
  * @param cookie Raw textual cookie representation.
- * @param requester Auth network requester. Used for anti spam measures.
  * @param session Session which correlates to the given token in cookie. 
  * @param account Pointer to account which will be set if cookie is valid and has a owner. Can be null if session is not owned.
  *
@@ -145,7 +137,7 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
  * \ref auth_errors_t.AUTH_INVALID_SIGNATURE, \ref auth_errors_t.AUTH_ACCOUNT_NOT_VERIFIED, 
  * \ref auth_errors_t.AUTH_ACCOUNT_NOT_ACTIVE
  */
-auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account);
+auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, auth_session_t** session, auth_account_t** account);
 
 #if defined(__cplusplus)
 }
