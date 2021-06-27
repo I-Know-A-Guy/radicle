@@ -41,17 +41,17 @@ extern "C" {
 /**
  * @brief Error types used by these high level functions.
  */
-enum {
+typedef enum auth_errors {
 	AUTH_OK = 0,
 	AUTH_ERROR = 1,
 	AUTH_EMAIL_NOT_FOUND,
+	AUTH_INVALID_PASSWORD,
 	AUTH_ACCOUNT_NOT_VERIFIED,
 	AUTH_ACCOUNT_NOT_ACTIVE,
-	AUTH_FAILED_VERIFY_PASSWORD,
-	AUTH_FAILED_TO_GENERATE_COOKIE,
-	AUTH_FAILED_TO_SAVE_SESSION,
-	AUTH_FAILED_TO_SAVE_SESSION_ACCESS,
-};
+	AUTH_INVALID_COOKIE,
+	AUTH_COOKIE_NOT_FOUND,
+	AUTH_INVALID_SIGNATURE
+} auth_errors_t;
 
 /**
  * @brief Creates a owned session and saves it to the database.
@@ -63,9 +63,9 @@ enum {
  * @param cookie Pointer to cookie whihc will be created by this function.
  * @param id Identifier of session row.
  *
- * @returns Returns 0 for success.
+ * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  */
-int auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
+auth_errors_t auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
 
 /**
  * @brief Creates a session which is not associated to any account.
@@ -76,9 +76,9 @@ int auth_make_owned_session(PGconn* conn, const uuid_t* uuid, const string_t* si
  * @param cookie Pointer to cookie whihc will be created by this function.
  * @param id Identifier of session row.
  *
- * @returns Returns 0 for success.
+ * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  */
-int auth_make_free_session(PGconn* conn, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
+auth_errors_t auth_make_free_session(PGconn* conn, const string_t* signature_key, auth_cookie_t** cookie, uint32_t* id);
 
 /**
  * @brief Logs a session access with its corresponding status.
@@ -89,9 +89,9 @@ int auth_make_free_session(PGconn* conn, const string_t* signature_key, auth_coo
  * @param requester Network requester.
  * @param status Status to be logged. Example: invalid_login
  *
- * @returns Returns 0 for success.
+ * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  */
-int auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status);
+auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status);
 
 /**
  * @brief Registers account and creates a session.
@@ -103,11 +103,11 @@ int auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requeste
  * @param cookie Pointer to \ref auth_cookie_t which will be created.
  *
  * @returns \ref auth_account_t.uuid will be set by function.
- * @returns Returns 0 on success.
+ * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  *
  * @pre \ref account_param_t.email, \ref account_param_t.password, \ref account_param_t.role, \ref account_param_t.verified must be set.
  */
-int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* requester, const string_t* signature_key, auth_cookie_t** cookie);
+auth_errors_t auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* requester, const string_t* signature_key, auth_cookie_t** cookie);
 
 /**
  * @brief Tries to sign in using the given email and password combination. 
@@ -121,13 +121,13 @@ int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* reque
  * @param account Pointer to \ref auth_account_t which will be created on success. 
  * @param cookie Pointer to \ref auth_cookie_t which will be created.
  *
+ * @returns Returns either \ref auth_errors_t.AUTH_OK or \ref auth_errors_t.AUTH_ERROR.
  * @returns Returns one of
- * AUTH_OK, AUTH_ERROR, AUTH_EMAIL_NOT_FOUND,
- * AUTH_ACCOUNT_NOT_VERIFIED, AUTH_ACCOUNT_NOT_ACTIVE,
- * AUTH_FAILED_VERIFY_PASSWORD, AUTH_FAILED_TO_GENERATE_COOKIE,
- * AUTH_FAILED_TO_SAVE_SESSION, AUTH_FAILED_TO_SAVE_SESSION_ACCESS
+ * \ref auth_errors_t.AUTH_OK, \ref auth_errors_t.AUTH_ERROR, \ref auth_errors_t.AUTH_EMAIL_NOT_FOUND,
+ * \ref auth_errors_t.AUTH_ACCOUNT_NOT_VERIFIED, \ref auth_errors_t.AUTH_ACCOUNT_NOT_ACTIVE,
+ * \ref auth_errors_t.AUTH_INVALID_PASSWORD
  */
-int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, auth_account_t** account);
+auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, auth_account_t** account);
 
 /**
  * @brief Checks if received cookie has a valid signature and exists in database.
@@ -138,11 +138,14 @@ int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, 
  * @param cookie Raw textual cookie representation.
  * @param requester Auth network requester. Used for anti spam measures.
  * @param session Session which correlates to the given token in cookie. 
- * @param account Pointer to account which will be set if cookie is valid and has a owner.
+ * @param account Pointer to account which will be set if cookie is valid and has a owner. Can be null if session is not owned.
  *
- * @returns Returns 0 on success.
+ * @returns Returns one of \ref auth_errors_t.AUTH_OK, \ref auth_errors_t.AUTH_ERROR,
+ * \ref auth_errors_t.AUTH_INVALID_COOKIE, \ref auth_errors_t.AUTH_COOKIE_NOT_FOUND,
+ * \ref auth_errors_t.AUTH_INVALID_SIGNATURE, \ref auth_errors_t.AUTH_ACCOUNT_NOT_VERIFIED, 
+ * \ref auth_errors_t.AUTH_ACCOUNT_NOT_ACTIVE
  */
-int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account);
+auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, const auth_requester_t* requester, auth_session_t** session, auth_account_t** account);
 
 #if defined(__cplusplus)
 }
