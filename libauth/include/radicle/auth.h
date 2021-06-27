@@ -110,7 +110,6 @@ int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* reque
 /**
  * @brief Tries to sign in using the given email and password combination. 
  * Returns the complete user account on success.
- * @todo Does requester really have to be here? wont it be in a seperate place?
  *
  * @param conn Connection to database.
  * @param email Email of account to lookup.
@@ -126,9 +125,7 @@ int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* reque
  * AUTH_FAILED_VERIFY_PASSWORD, AUTH_FAILED_TO_GENERATE_COOKIE,
  * AUTH_FAILED_TO_SAVE_SESSION, AUTH_FAILED_TO_SAVE_SESSION_ACCESS
  */
-int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password,
-	       	const auth_requester_t* requester, const string_t* signature_key,
-		auth_account_t** account, auth_cookie_t** cookie);
+int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, auth_account_t** account);
 
 /**
  * @brief Checks if received cookie has a valid signature and exists in database.

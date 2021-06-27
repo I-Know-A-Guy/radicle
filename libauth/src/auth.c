@@ -93,9 +93,8 @@ int auth_register(PGconn* conn, auth_account_t* account, auth_requester_t* reque
 	return 0;
 }
 
-int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password,
-	       	const auth_requester_t* requester, const string_t* signature_key,
-		auth_account_t** account, auth_cookie_t** cookie) {
+int auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, auth_account_t** account) {
+		
 
 	if(auth_get_account_by_email(conn, email, account)) {
 		DEBUG("Failed to retrieve account.\n");
