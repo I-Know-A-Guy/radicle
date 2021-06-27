@@ -138,6 +138,11 @@ int auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string
 		return 1;
 	}
 
+	if(*session == NULL) {
+		auth_cookie_free(&cookie_result);
+		return 1;
+	}
+
 	if(hmac_verify_salted(signature_key, (*session)->salt, cookie_result->signature, cookie_result->token)) {
 		auth_cookie_free(&cookie_result);
 		auth_account_free(account);
