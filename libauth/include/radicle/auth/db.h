@@ -42,7 +42,7 @@ extern "C" {
 /**
 * @brief Sessions expire one month after being created or manually revoked.
 */
-#define SESSION_EXPIRE 2629800 // One month in seconds
+#define SESSION_EXPIRE 2629746
 
 /**
  * @brief Inserts account into Accounts. Sets verified to false.

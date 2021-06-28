@@ -20,9 +20,6 @@
  * @file
  * @brief Header file containing all functions related to low level database manipulation.
  * @author Nils Egger
- *
- * @todo Create pgdb_bind_timestamp which converts timestap to valid ISO timestamp string.
- *
  * @addtogroup pgdb
  * @{
  */
@@ -248,6 +245,16 @@ void pgdb_bind_uuid(const uuid_t* text, const int index, pgdb_params_t* params);
  */
 void pgdb_bind_bool(const bool flag, const int index, pgdb_params_t* params);
 
+/**
+ * @brief Binds timestamp to query.
+ *
+ * @param timestamp Value of timestamp. 
+ * @param index Index to use in arrays.
+ * @param param \ref pgdb_params_t struct to use for binding.
+ *
+ * @returns Returns void. 
+ */
+void pgdb_bind_timestamp(const time_t timestamp, const int index, pgdb_params_t* params);
 
 /**
  * @brief Retrieves a text value and writes it to buffer.
@@ -262,7 +269,7 @@ void pgdb_bind_bool(const bool flag, const int index, pgdb_params_t* params);
 int pgdb_get_text(const pgdb_result_t* result, const int row, const char* field, string_t** buffer);
 
 /**
- * @brief Retrievs a int32.
+ * @brief Retrievs a uint32.
  *
  * @param result \ref pgdb_params_t containing query result. 
  * @param row Row index of data.
@@ -272,6 +279,19 @@ int pgdb_get_text(const pgdb_result_t* result, const int row, const char* field,
  * @returns Returns 1 if value is NULL, otherwise 0 for success.
  */
 int pgdb_get_uint32(const pgdb_result_t* result, const int row, const char* field, uint32_t* buffer);
+
+/**
+ * @brief Retrievs a uint64.
+ *
+ * @param result \ref pgdb_params_t containing query result. 
+ * @param row Row index of data.
+ * @param field Name of the column.
+ * @param buffer Buffer to write to.
+ *
+ * @returns Returns 1 if value is NULL, otherwise 0 for success.
+ */
+int pgdb_get_uint64(const pgdb_result_t* result, const int row, const char* field, uint64_t* buffer);
+
 
 /**
  * @brief Retrievs a boolean value.
@@ -319,6 +339,24 @@ int pgdb_get_uuid(const pgdb_result_t* result, const int row, const char* field,
  * @returns True if column exists.
  */
 bool pgdb_exists(const pgdb_result_t* result, const char* name, const int row);
+
+/**
+ * @brief Converts from unix epoch to 01-01-2000 epoch in microseconds.
+ *
+ * @param timestamp UNIX timestamp.
+ *
+ * @returns Returns time in microseconds with epoch at 01-01-2000.
+ */
+int64_t pgdb_convert_to_pg_timestamp(const time_t timestamp);
+
+/**
+ * @brief Converts postgres timestamp to UNIX timestamp in seconds since 1970.
+ *
+ * @param timestamp Postgres timestamp.
+ *
+ * @returns Returns time in seconds since 1970.
+ */
+time_t pgdb_convert_to_unix_timestamp(const int64_t timestamp);
 
 #if defined(__cplusplus)
 }

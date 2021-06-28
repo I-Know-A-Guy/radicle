@@ -26,14 +26,15 @@
 #include "radicle/auth/db.h"
 
 int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid) {
-	const char* stmt = "INSERT INTO Accounts(uuid, email, password, role, verified, created, active) VALUES(gen_random_uuid(), $1::text, $2::text, $3::role, $4::boolean, now(), TRUE) RETURNING uuid;";
+	const char* stmt = "INSERT INTO Accounts(uuid, email, password, role, verified, created, active) VALUES(gen_random_uuid(), $1::text, $2::text, $3::role, $4::boolean, $5::timestamp, TRUE) RETURNING uuid;";
 	pgdb_result_t* result = NULL;
-	pgdb_params_t* params = pgdb_params_new(4);
+	pgdb_params_t* params = pgdb_params_new(5);
 
 	pgdb_bind_text(account->email, 0, params);
 	pgdb_bind_text(account->password, 1, params);
 	pgdb_bind_text(account->role, 2, params);
 	pgdb_bind_bool(account->verified, 3, params);
+	pgdb_bind_timestamp(time(NULL), 4, params);
 
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
 		pgdb_params_free(&params);
@@ -67,14 +68,15 @@ int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* tok
 
 int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, const time_t expires, const string_t* salt, uint32_t* id) {
 
-	const char* stmt = "INSERT INTO Sessions(owner, token, created, expires, revoked, salt) VALUES($1::uuid, $2::text, now(), $3::timestamp, FALSE, $4::text) RETURNING id;";
-	pgdb_params_t* params = pgdb_params_new(4);
+	const char* stmt = "INSERT INTO Sessions(owner, token, created, expires, revoked, salt) VALUES($1::uuid, $2::text, $3::timestamp, $4::timestamp, FALSE, $5::text) RETURNING id;";
+	pgdb_params_t* params = pgdb_params_new(5);
 	if(owner != NULL) {
 		pgdb_bind_uuid(owner, 0, params);
 	}
 	pgdb_bind_text(token, 1, params);
-	pgdb_bind_uint64(expires, 2, params);
-	pgdb_bind_text(salt, 3, params);
+	pgdb_bind_timestamp(time(NULL), 2, params);
+	pgdb_bind_timestamp(expires, 3, params);
+	pgdb_bind_text(salt, 4, params);
 
 	pgdb_result_t* result = NULL;
 
@@ -145,10 +147,10 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_session_t** session, auth_account_t** account) {
 	const char* stmt = "SELECT Sessions.id, Sessions.salt, Accounts.uuid, Accounts.email, Accounts.role, Accounts.verified, Accounts.active, Accounts.created" \
 			   " FROM Sessions LEFT JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
-			   " revoked=FALSE AND expires<$2 LIMIT 1";
+			   " revoked=FALSE AND expires>$2::timestamp LIMIT 1";
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(cookie, 0, params);
-	pgdb_bind_uint64(time(NULL), 1, params);
+	pgdb_bind_timestamp(time(NULL), 1, params);
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
