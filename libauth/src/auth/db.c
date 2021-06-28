@@ -99,7 +99,7 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 	const char* stmt = "INSERT INTO SessionAccesses(session_id, requester, url, status, date) VALUES($1::int4, $2::text, $3::text, $4::text, now());";
 	pgdb_params_t* params = pgdb_params_new (4);
 
-	pgdb_bind_int32(session_id, 0, params);
+	pgdb_bind_uint32(session_id, 0, params);
 	pgdb_bind_text(requester->ip, 1, params);
 	pgdb_bind_text(requester->path, 2, params);
 	pgdb_bind_text(status, 3, params);

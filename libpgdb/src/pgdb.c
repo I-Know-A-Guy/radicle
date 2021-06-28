@@ -164,7 +164,7 @@ int pgdb_transaction_rollback(PGconn* conn) {
 	return pgdb_execute(conn, "ROLLBACK;");
 }
 
-void pgdb_bind_int32(int value, int index, pgdb_params_t* params) {
+void pgdb_bind_uint32(int value, int index, pgdb_params_t* params) {
 	uint32_t* buffer = malloc(sizeof(uint32_t));
 	*buffer = htonl((uint32_t)value);
 

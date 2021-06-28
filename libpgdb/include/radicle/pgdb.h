@@ -195,7 +195,6 @@ int pgdb_transaction_rollback(PGconn* conn);
 
 /**
  * @brief Binds int32 to query.
- * @todo change to uint32_t
  *
  * @param value Value to bind. 
  * @param index Index to use in arrays.
@@ -203,7 +202,7 @@ int pgdb_transaction_rollback(PGconn* conn);
  *
  * @returns Returns void.
  */
-void pgdb_bind_int32(const int value, const int index, pgdb_params_t* params);
+void pgdb_bind_uint32(const int value, const int index, pgdb_params_t* params);
 
 /**
  * @brief Binds timestamp to query.
