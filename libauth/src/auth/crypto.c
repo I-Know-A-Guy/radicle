@@ -203,7 +203,7 @@ int auth_generate_session_cookie(const string_t* key, auth_cookie_t** cookie) {
 	strncpy(final_key->ptr, key->ptr, key->length);
 	strncat(final_key->ptr, (*cookie)->salt->ptr, (*cookie)->salt->length);
 
-	if(hmac_sign((unsigned char*)(*cookie)->token->ptr, (*cookie)->token->length, key, &(*cookie)->signature)) {
+	if(hmac_sign((unsigned char*)(*cookie)->token->ptr, (*cookie)->token->length, final_key, &(*cookie)->signature)) {
 		string_free(&final_key);
 		auth_cookie_free(cookie);
 		ERROR("Failed to sign session id.");

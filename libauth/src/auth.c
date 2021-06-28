@@ -126,6 +126,7 @@ auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, co
 	}
 
 	if(hmac_verify_salted(signature_key, (*session)->salt, cookie_result->signature, cookie_result->token)) {
+		DEBUG("%s %s %s %s\n", signature_key->ptr, (*session)->salt->ptr, cookie_result->signature->ptr, cookie_result->token->ptr);
 		auth_cookie_free(&cookie_result);
 		auth_account_free(account);
 		return AUTH_INVALID_SIGNATURE;

@@ -62,7 +62,7 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	
 	auth_session_t* cookie_session = NULL;
 	auth_account_t* cookie_account = NULL;
-	ASSERT_EQ(auth_verify_cookie(conn, key, signed_in_cookie->cookie, &cookie_session, &cookie_account), AUTH_OK) << signed_in_cookie->token->ptr;
+	ASSERT_EQ(auth_verify_cookie(conn, key, signed_in_cookie->cookie, &cookie_session, &cookie_account), AUTH_OK) << signed_in_cookie->cookie->ptr;
 	take_session(cookie_session);
 	take_account(cookie_account);
 
