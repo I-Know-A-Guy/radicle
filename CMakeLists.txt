@@ -20,3 +20,26 @@ include(GoogleTest)
 add_subdirectory(libcommon)
 add_subdirectory(libpgdb)
 add_subdirectory(libauth)
+
+add_library(
+	${PROJECT_NAME}
+	INTERFACE
+)	
+
+target_include_directories(
+	${PROJECT_NAME}
+	INTERFACE
+	include
+)
+
+target_link_libraries(
+	${PROJECT_NAME}
+	INTERFACE
+	radicle_common
+	radicle_pgdb
+	radicle_auth
+)
+add_library(
+	${PROJECT_NAME}
+	INTERFACE
+)	
