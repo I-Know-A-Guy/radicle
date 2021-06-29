@@ -20,6 +20,7 @@
  * @file
  * @brief Contains RadicleAuthTests fixture for testing.
  * @author Nils Egger
+ * @bug Fix Completer not recognizing include "radicle/tests/pgdb_hooks.hpp". Most probably invalid CMake configuration.
  * @addtogroup testing 
  * @{
  * @addtogroup auth_testing Auth Testing
