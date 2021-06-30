@@ -20,9 +20,10 @@
 
 #include <gtest/gtest.h>
 
+#include "subhook.h"
+
 #include "radicle/types/string.h"
 #include "radicle/types/uuid.h"
-#include "radicle/tests/subhook.h"
 
 class RadicleTests: public ::testing::Test {
 

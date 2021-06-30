@@ -30,8 +30,9 @@
 #include <gtest/gtest.h>
 #include <libpq-fe.h>
 
+#include "subhook.h"
+
 #include "radicle/pgdb.h"
-#include "radicle/tests/subhook.h"
 #include "radicle/tests/radicle_fixture.hpp"
 
 /**

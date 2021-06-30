@@ -1,44 +1,32 @@
-project(radicle_common)
-
-add_library(
-	${PROJECT_NAME}
-       	STATIC
-       	src/types/string.c
-       	src/types/uuid.c
-)
-target_include_directories(
-	${PROJECT_NAME}
-       	PUBLIC
-       	${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# TODO if statement for either adding subhook_unix.c or subhook_windows.c depending on building platform
-add_library(
-	radicle_common_testlib
-	STATIC
-	tests/src/subhook.c
-	tests/src/subhook_unix.c
-	tests/src/subhook_x86.c
+target_sources(
+	radicle
+	PRIVATE
+		include/radicle/types/uuid.h	
+		src/types/uuid.c
+		include/radicle/types/string.h	
+		src/types/string.c
+		include/radicle/print.h
 )
 
 target_include_directories(
-	radicle_common_testlib
-	PUBLIC	
-       	${CMAKE_CURRENT_SOURCE_DIR}/tests/include
+	radicle
+	PUBLIC
+	include
 )
 
-add_executable(
-	"${PROJECT_NAME}_test"
-	tests/src/types/string.cpp
-	tests/src/types/uuid.cpp
-)
+if(BUILD_TESTING)
 
-target_link_libraries(
-	"${PROJECT_NAME}_test"
-	${PROJECT_NAME}
-	radicle_common_testlib
-	gtest_main
-)
+	# TODO if statement for either adding subhook_unix.c or subhook_windows.c depending on building platform
+	target_sources(
+		radicle_test
+		PRIVATE
+			tests/src/types/uuid.cpp
+			tests/src/types/string.cpp
+	)
 
-gtest_discover_tests(${PROJECT_NAME}_test)
-
+	target_include_directories(
+		radicle_test
+		PUBLIC	
+		tests/include
+	)
+endif()
