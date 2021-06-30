@@ -36,12 +36,13 @@ if(BUILD_TESTING)
 	target_include_directories(
 		radicle_test
 		PUBLIC
+		subhook
 	)
 
 	target_link_libraries(
 		radicle_test
-		radicle
 		subhook
+		radicle
 		gtest_main
 	)
 	

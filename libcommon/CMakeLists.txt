@@ -20,13 +20,14 @@ if(BUILD_TESTING)
 	target_sources(
 		radicle_test
 		PRIVATE
+			tests/include/radicle/tests/radicle_fixture.hpp
 			tests/src/types/uuid.cpp
 			tests/src/types/string.cpp
 	)
 
 	target_include_directories(
 		radicle_test
-		PUBLIC	
+		PUBLIC
 		tests/include
 	)
 endif()
