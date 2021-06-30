@@ -16,6 +16,7 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+#include <libpq-fe.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -287,4 +288,64 @@ int64_t pgdb_convert_to_pg_timestamp(const time_t timestamp) {
 
 time_t pgdb_convert_to_unix_timestamp(const int64_t timestamp) {
 	return (time_t)(timestamp / 1000000) + 946684800;
+}
+
+pgdb_connection_queue_t* pgdb_connection_queue_new(const char* connection_info, int max_connections, int64_t max_age) {
+	pgdb_connection_queue_t* queue = calloc(1, sizeof(pgdb_connection_queue_t));
+	queue->conn_info = calloc(strlen(connection_info) + 1, sizeof(char));
+	strcpy(queue->conn_info, connection_info);
+	queue->max_connections = max_connections;
+	queue->max_age = max_age;
+	queue->connections = calloc(max_connections, sizeof(pgdb_connection_t));
+	return queue;
+}
+
+void pgdb_connection_queue_free(pgdb_connection_queue_t** queue) {
+	if(*queue == NULL) return;
+	free((*queue)->conn_info);
+	for(int i = 0; i < (*queue)->max_connections; i++) {
+		if((*queue)->connections[i].active) {
+			PQfinish((*queue)->connections[i].connection);
+		}
+	}
+	free((*queue)->connections);
+	free(*queue);
+	*queue = NULL;
+}
+
+int pgdb_claim_connection(pgdb_connection_queue_t* queue, pgdb_connection_t** conn) {
+	// try to find active connections which arent claimed.
+	for(int i = 0; i < queue->max_connections; i++) {
+		if(queue->connections[i].active && !queue->connections[i].claimed) {
+			queue->connections[i].claimed = true;
+			*conn = &queue->connections[i];
+			return 0;
+		}
+	}
+
+	// try to find non active connection which isnt claimed.
+	for(int i = 0; i < queue->max_connections; i++) {
+		if(!queue->connections[i].active && !queue->connections[i].claimed) {
+			queue->connections[i].claimed = true;
+			if(pgdb_connect(queue->conn_info, &queue->connections[i].connection)) {
+				queue->connections[i].claimed = false;
+				return 1;
+			}
+			queue->connections[i].active = true;
+			queue->connections[i].created = time(NULL);
+			*conn = &queue->connections[i];
+			return 0;
+		}
+	}
+
+	*conn = NULL;
+	return 0;
+}
+
+void pgdb_release_connection(pgdb_connection_t** connection) {
+	(*connection)->claimed = false;
+	// Reset created, otherwise it may be destroyed instantly.
+	(*connection)->created = time(NULL);
+	// Maybe reset connection? In case of errors or open transactions etc.
+	*connection = NULL;
 }

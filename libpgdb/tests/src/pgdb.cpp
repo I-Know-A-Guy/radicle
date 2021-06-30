@@ -20,6 +20,7 @@
 
 #include <libpq-fe.h>
 
+#include "radicle/tests/pgdb_hooks.hpp"
 #include "radicle/pgdb.h"
 
 class PGDBTest: public ::testing::Test {
@@ -72,3 +73,23 @@ TEST(PGDBParamsTest, TestBindInt) {
 	pgdb_params_free(&params);
 }
 
+TEST_F(RadiclePGDBHooks, TestCreateLimit) {
+	// TODO subhook for pgdb_connect
+	install_pgdb_connect_fake();	
+	pgdb_connection_queue_t* queue = pgdb_connection_queue_new("", 1, 0);
+
+	pgdb_connection_t* claimed = NULL;
+	EXPECT_EQ(pgdb_claim_connection(queue, &claimed), 0);
+	EXPECT_TRUE(claimed != NULL);
+
+	pgdb_connection_t* not_claimed = NULL;
+	EXPECT_EQ(pgdb_claim_connection(queue, &not_claimed), 0);
+	EXPECT_TRUE(not_claimed == NULL);
+
+	pgdb_release_connection(&claimed);
+	EXPECT_TRUE(claimed == NULL);
+	EXPECT_EQ(pgdb_claim_connection(queue, &claimed), 0);
+	EXPECT_TRUE(claimed != NULL);
+
+	pgdb_connection_queue_free(&queue);
+}

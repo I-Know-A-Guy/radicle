@@ -126,6 +126,12 @@ int pgdb_fetch_param_fake_uuid(PGconn* conn, const char* stmt, const pgdb_params
  */
 int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
+/**
+ * @brief Fake function for \ref pgdb_connect which always returns success. Connection will stay null.
+ *
+ * @returns 0
+ */
+int pgdb_connect_fake(const char* conninfo, PGconn** connection);
 
 class RadiclePGDBHooks: public RadicleTests {
 
@@ -144,6 +150,12 @@ class RadiclePGDBHooks: public RadicleTests {
 
 		subhook_t install_execute_param_always_success() {
 			subhook_t buf = subhook_new((void*)pgdb_execute_param, (void*)pgdb_execute_param_fake, SUBHOOK_64BIT_OFFSET);
+			install_hook(buf);
+			return buf;
+		}
+
+		subhook_t install_pgdb_connect_fake() {
+			subhook_t buf = subhook_new((void*)pgdb_connect, (void*)pgdb_connect_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

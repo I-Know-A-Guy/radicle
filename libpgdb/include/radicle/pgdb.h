@@ -358,6 +358,63 @@ int64_t pgdb_convert_to_pg_timestamp(const time_t timestamp);
  */
 time_t pgdb_convert_to_unix_timestamp(const int64_t timestamp);
 
+/**
+ * @brief Struct which contains info about a claimed or free connection.
+ */
+typedef struct pgdb_connection {
+	PGconn* connection; /**< Actual connection to database. */
+	bool active; /**< If active, connection has been made to database. This does not guarantee a successfull conneciton, simply that the connection once has been made. */
+	bool claimed; /**< If locked, connection is being used by thread. */
+	time_t created; /**< Timestamp when connection was made. Used for keeping track of age. */
+} pgdb_connection_t;
+
+/**
+ * @brief Struct which contains all connections and is capable of creating new ones or release old ones.
+ * @todo Create function which checks in intervalls if there are connections, which must be freed.
+ */
+typedef struct pgdb_connection_queue {
+	char* conn_info; /**< Connection info required to connect to database. */
+	int max_connections; /**< Max amount of simultanious connections. */
+	int64_t max_age; /**< Max age allowed of non active connection. */
+	pgdb_connection_t* connections; /**< Array of connections. */
+} pgdb_connection_queue_t;
+
+/**
+ * @brief Creates a new connection queue.
+ *
+ * @param max_connection Max simultanious connections.
+ * @param max_age Max age of a connection which is not being used.
+ *
+ * @returns Pointer to new connection queue.
+ */
+pgdb_connection_queue_t* pgdb_connection_queue_new(const char* connection_info, int max_connections, int64_t max_age);
+
+/**
+ * @brief Frees a connection queue.
+ *
+ * @param queue Pointer to connection queue.
+ */
+void pgdb_connection_queue_free(pgdb_connection_queue_t** queue);
+
+/**
+ * @brief Checks if there is a free connection in queue. If not returns NULL.
+ *
+ * @param queue Queue to take connection from.
+ * @param conn Connection which will be claimed. NULL if none could be found.
+ *
+ * @returns Returns 0 on success. If non is found, 0 is also returned. For failures like, connection could not be made to database, 1 is returned.
+ *
+ * @see pgdb_release_connection()
+ */
+int pgdb_claim_connection(pgdb_connection_queue_t* queue, pgdb_connection_t** conn);
+
+/**
+ * @brief Releases a connection and makes it available by pgdb_claim_connection()
+ *
+ * @see pgdb_claim_connection()
+ */
+void pgdb_release_connection(pgdb_connection_t** connection);
+
 #if defined(__cplusplus)
 }
 #endif

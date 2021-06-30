@@ -93,3 +93,7 @@ int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t
 	return 0;
 }
 
+int pgdb_connect_fake(const char* conninfo, PGconn** connection) {
+	*connection = NULL;
+	return 0;
+}
