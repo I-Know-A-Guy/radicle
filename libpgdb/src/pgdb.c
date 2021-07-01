@@ -297,6 +297,10 @@ pgdb_connection_queue_t* pgdb_connection_queue_new(const char* connection_info, 
 	queue->max_connections = max_connections;
 	queue->max_age = max_age;
 	queue->connections = calloc(max_connections, sizeof(pgdb_connection_t));
+	for(int i = 0; i < max_connections; i++) {
+		queue->connections[i].active = false;
+		queue->connections[i].claimed = false;
+	}
 	return queue;
 }
 
@@ -329,6 +333,7 @@ int pgdb_claim_connection(pgdb_connection_queue_t* queue, pgdb_connection_t** co
 			queue->connections[i].claimed = true;
 			if(pgdb_connect(queue->conn_info, &queue->connections[i].connection)) {
 				queue->connections[i].claimed = false;
+				*conn = NULL;
 				return 1;
 			}
 			queue->connections[i].active = true;
@@ -343,6 +348,7 @@ int pgdb_claim_connection(pgdb_connection_queue_t* queue, pgdb_connection_t** co
 }
 
 void pgdb_release_connection(pgdb_connection_t** connection) {
+	if(*connection == NULL) return;
 	(*connection)->claimed = false;
 	// Reset created, otherwise it may be destroyed instantly.
 	(*connection)->created = time(NULL);
