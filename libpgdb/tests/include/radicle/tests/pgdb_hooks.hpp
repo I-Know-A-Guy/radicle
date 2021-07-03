@@ -133,27 +133,43 @@ int pgdb_fetch_param_fake_id(PGconn* conn, const char* stmt, const pgdb_params_t
  */
 int pgdb_connect_fake(const char* conninfo, PGconn** connection);
 
+/**
+ * @brief Provides different hooks for faking pgdb_* methods
+ */
 class RadiclePGDBHooks: public RadicleTests {
 
 	protected:
+		
+		/**
+		 * @brief Replaces \ref pgdb_fetch_param with \ref pgdb_fetch_param_fake_uuid
+		 */
 		subhook_t install_fetch_uuid_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_uuid, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}
 
+		/**
+		 * @brief Replaces \ref pgdb_fetch_param with \ref pgdb_fetch_param_fake_id
+		 */
 		subhook_t install_fetch_id_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_id, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}
 
+		/**
+		 * @brief Replaces \ref pgdb_execute_param with \ref pgdb_execute_param_fake 
+		 */
 		subhook_t install_execute_param_always_success() {
 			subhook_t buf = subhook_new((void*)pgdb_execute_param, (void*)pgdb_execute_param_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}
 
+		/**
+		 * @brief Replaces \ref pgdb_connect with pgdb_connect_fake
+		 */
 		subhook_t install_pgdb_connect_fake() {
 			subhook_t buf = subhook_new((void*)pgdb_connect, (void*)pgdb_connect_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);

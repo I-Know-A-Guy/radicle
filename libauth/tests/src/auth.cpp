@@ -31,6 +31,9 @@
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/auth.h"
 
+/**
+ * @brief Tests if correct login works with username and cookies.
+ */
 TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	string_t* email = manage_string("test-user@radicle.com");
 	string_t* password = manage_string("12345678");

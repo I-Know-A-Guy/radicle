@@ -20,7 +20,6 @@
  * @file
  * @brief Contains RadicleAuthTests fixture for testing.
  * @author Nils Egger
- * @bug Fix Completer not recognizing include "radicle/tests/pgdb_hooks.hpp". Most probably invalid CMake configuration.
  * @addtogroup testing 
  * @{
  * @addtogroup auth_testing Auth Testing
@@ -83,23 +82,28 @@ int hmac_sign_fake(const unsigned char* input, const size_t input_length, const 
 
 /**
  * @brief Class for tests which use any of the Auth functions.
- * @todo add documentation for ownerships.
  */
 class RadicleAuthTests: public RadiclePGDBHooks {
 
-	std::vector<auth_account_t*> accounts;
-	std::vector<auth_cookie_t*> cookies;
-	std::vector<auth_session_t*> sessions;
+	std::vector<auth_account_t*> accounts; /**< Account pointers which will be freed on TearDown() */
+	std::vector<auth_cookie_t*> cookies; /**< Cookie pointers which will be freed on TearDown() */
+	std::vector<auth_session_t*> sessions; /**< Session pointers which will be freed on TearDown() */
 
 	protected:
-		PGconn* conn = NULL;
-		auth_requester_t* test_requester;
+		PGconn* conn = NULL; /**< Fake connection to database. */
+		auth_requester_t* test_requester; /**< Common requester which can be used for unit tests. */
 
+		/**
+		 * @brief Initializes test_requester and calls RadicleTests::SetUp()
+		 */
 		void SetUp() override {
 			test_requester = auth_requester_newl("127.0.0.1", "/i/am/a/test");
 			RadicleTests::SetUp();
 		}
 
+		/**
+		 * @brief Frees accounts, cookies, session, test_requester and call RadicleTests::TearDown()
+		 */
 		void TearDown() override {
 			for(std::vector<auth_account_t*>::iterator iter = accounts.begin(); iter != accounts.end(); iter++) {
 				auth_account_free(iter.base());
@@ -114,6 +118,16 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			RadicleTests::TearDown();
 		}
 
+		/**
+		 * @brief Creates new account object and takes ownership.
+		 *
+		 * @param email Email of account
+		 * @param password Password of account, will no be hashed.
+		 * @param role Role of account
+		 * @param verified Whetever email should count as verified.
+		 *
+		 * @return Returns pointer to account object.
+		 */
 		auth_account_t* manage_account(const char* email, const char* password, const char* role, const bool verified) {
 			string_t* email_buf = manage_string(email);
 			string_t* password_buf = manage_string(password);
@@ -159,12 +173,22 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			sessions.push_back(session);
 		}
 
+		/**
+		 * @brief Replaces \ref pgdb_fetch_param with \ref pgdb_fetch_param_fake_account
+		 *
+		 * @return Returns pointer to subhook so it can be uninstalled.
+		 */
 		subhook_t install_fetch_account_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_account, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}
 
+		/**
+		 * @brief Replaces \ref pgdb_fetch_param with \ref pgdb_fetch_param_fake_owned_session 
+		 *
+		 * @return Returns pointer to subhook so it can be uninstalled.
+		 */
 		subhook_t install_fetch_session_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_owned_session, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
@@ -182,10 +206,16 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 		}
 };
 
+/**
+ * @brief Test suite which initializes database for authentication use.
+ */
 class RadicleConnectedAuthTests: public RadicleAuthTests {
 
 	protected:
 
+		/**
+		 * @brief Initializes database and connection.
+		 */
 		static void SetUpTestSuite() {
 			const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
 			PGconn* temp_conn;
@@ -194,12 +224,18 @@ class RadicleConnectedAuthTests: public RadicleAuthTests {
 			PQfinish(temp_conn);
 		}
 
+		/**
+		 * @brief Connect to the database
+		 */
 		void SetUp() override {
 			RadicleAuthTests::SetUp();
 			const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
 			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
 		}
 
+		/**
+		 * @brief Clears the connection to the database.
+		 */
 		void TearDown() override {
 			RadicleAuthTests::TearDown();
 			PQfinish(conn);

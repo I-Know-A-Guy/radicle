@@ -25,23 +25,32 @@
 #include "radicle/types/string.h"
 #include "radicle/types/uuid.h"
 
+/**
+ * @brief Provies common_uuid, common_string and manages strings, uuids and hook.
+ */
 class RadicleTests: public ::testing::Test {
 
-	std::vector<string_t*> strings;
-	std::vector<uuid_t*> uuids;
-	std::vector<subhook_t> hooks;
+	std::vector<string_t*> strings; /**< Will be freed on TearDown */
+	std::vector<uuid_t*> uuids; /**< Will be freed on TearDown */
+	std::vector<subhook_t> hooks; /**< Will be freed on TearDown */
 
 	protected:
 
-	uuid_t* common_uuid;
-	string_t* common_string;
+	uuid_t* common_uuid; /**< Common string which can be used in place of real strings */
+	string_t* common_string; /**< Common uuid which can be used in place of a real uuid */
 
+	/**
+	 * @brief Initialzes common members.
+	 */
 	void SetUp() override {
 		const unsigned char temp[16] = {0x00};
 		common_uuid = uuid_new(temp);
 		common_string = string_from_literal("I am a test string!");
 	}
 
+	/**
+	 * @brief Frees all objects of which ownership was taken.
+	 */
 	void TearDown() override {
 		for(std::vector<string_t*>::iterator iter = strings.begin(); iter != strings.end(); iter++) {
 			string_free(iter.base());
@@ -59,22 +68,33 @@ class RadicleTests: public ::testing::Test {
 		string_free(&common_string);
 	}
 
-
+	/**
+	 * @brief Takes ownership of string and frees it on TearDown()
+	 */
 	string_t* manage_string(const char* literal) {
 		string_t* buf = string_from_literal(literal);
 		strings.push_back(buf);
 		return buf;
 	}
 
+	/**
+	 * @brief Tests if \ref string_t.ptr length matches given \ref string.length
+	 */
 	void test_string_len(string_t* buf) {
 		EXPECT_EQ(buf->length, strlen(buf->ptr));
 	}
 
+	/**
+	 * @brief Takes ownership of a hook and installs it.
+	 */
 	void install_hook(subhook_t hook) {
 		hooks.push_back(hook);
 		subhook_install(hook);
 	}
 
+	/**
+	 * @brief Uninstalls hook and removes it from \ref hooks
+	 */
 	void remove_hook(subhook_t hook) {
 		subhook_remove(hook);
 		subhook_free(hook);
