@@ -136,6 +136,7 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
  * \ref auth_errors_t.AUTH_INVALID_COOKIE, \ref auth_errors_t.AUTH_COOKIE_NOT_FOUND,
  * \ref auth_errors_t.AUTH_INVALID_SIGNATURE, \ref auth_errors_t.AUTH_ACCOUNT_NOT_VERIFIED, 
  * \ref auth_errors_t.AUTH_ACCOUNT_NOT_ACTIVE
+ * @todo Replace auth_session_t with uint32_t, when calling this function, salt is of no use when going further
  */
 auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, auth_session_t** session, auth_account_t** account);
 
