@@ -69,10 +69,13 @@ FOREIGN KEY (owner) REFERENCES Accounts(uuid)\
 "CREATE TABLE SessionAccesses(\
 id SERIAL PRIMARY KEY,\
 session_id INT NOT NULL,\
-requester TEXT NOT NULL,\
-url TEXT NOT NULL,\
+requester_ip TEXT NOT NULL,\
+requester_port INT NOT NULL,\
 date TIMESTAMP NOT NULL,\
-status TEXT NOT NULL,\
+url TEXT NOT NULL,\
+response_time INT NOT NULL,\
+response_code INT NOT NULL,\
+internal_status INT NOT NULL,\
 FOREIGN KEY (session_id) REFERENCES Sessions(id)\
 );";
 

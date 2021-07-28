@@ -97,15 +97,19 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 	return 0;
 }
 
-int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const string_t* status) {
-	const char* stmt = "INSERT INTO SessionAccesses(session_id, requester, url, status, date) VALUES($1::int4, $2::text, $3::text, $4::text, $5::timestamp);";
-	pgdb_params_t* params = pgdb_params_new(5);
+int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log) {
+	const char* stmt = "INSERT INTO SessionAccesses(session_id, requester_ip, requester_port, date, url, response_time, response_code, internal_status) "
+			   "VALUES($1::int4, $2::text, $3::int4, $4::timestamp, $5::text, $6::int4, $7::int4, $8::int4);";
+	pgdb_params_t* params = pgdb_params_new(8);
 
 	pgdb_bind_uint32(session_id, 0, params);
-	pgdb_bind_text(requester->ip, 1, params);
-	pgdb_bind_text(requester->path, 2, params);
-	pgdb_bind_text(status, 3, params);
-	pgdb_bind_timestamp(time(NULL), 4, params);
+	pgdb_bind_text(request_log->ip, 1, params);
+	pgdb_bind_uint32(request_log->port, 2, params);
+	pgdb_bind_timestamp(request_log->date, 3, params);
+	pgdb_bind_text(request_log->url, 4, params);
+	pgdb_bind_uint32(request_log->response_time, 5, params);
+	pgdb_bind_uint32(request_log->response_code, 6, params);
+	pgdb_bind_uint32(request_log->internal_status, 7, params);
 
 	if(pgdb_execute_param(conn, stmt, params)) {
 		DEBUG("Failed to insert session access.\n");

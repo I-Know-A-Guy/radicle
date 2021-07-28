@@ -44,13 +44,10 @@ auth_errors_t auth_make_free_session(PGconn* conn, const string_t* signature_key
 	return auth_make_owned_session(conn, NULL, signature_key, cookie, id);
 }
 
-auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status) {
-	string_t* s = string_from_literal(status);
-	if(auth_save_session_access(conn, session_id, requester, s)) {
-		string_free(&s);
+auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log) {
+	if(auth_save_session_access(conn, session_id, request_log)) {
 		return AUTH_ERROR;
 	}
-	string_free(&s);
 	return AUTH_OK;
 }
 

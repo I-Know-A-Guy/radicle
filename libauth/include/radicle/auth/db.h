@@ -89,7 +89,7 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
  *
  * @returns Returns 0 on success.
  */
-int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const string_t* status);
+int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log);
 
 /**
  * @brief Retrieves account matching email, if none is found, \p account stays NULL.

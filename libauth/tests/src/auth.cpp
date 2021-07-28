@@ -47,7 +47,7 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	ASSERT_EQ(auth_make_owned_session(conn, account->uuid, key, &register_cookie, &session_id), AUTH_OK);
 	take_cookie(register_cookie);
 
-	ASSERT_EQ(auth_log_access(conn, session_id, test_requester, "register"), AUTH_OK);
+	ASSERT_EQ(auth_log_access(conn, session_id, test_request_log), AUTH_OK);
 
 	auth_account_t* signed_in_account = NULL;
 	ASSERT_EQ(auth_sign_in(conn, email, password, &signed_in_account), AUTH_OK);
@@ -61,7 +61,7 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	take_cookie(signed_in_cookie);
 	ASSERT_TRUE(signed_in_cookie != NULL);
 
-	ASSERT_EQ(auth_log_access(conn, session_id, test_requester, "credentials-sign-in"), AUTH_OK);
+	ASSERT_EQ(auth_log_access(conn, session_id, test_request_log), AUTH_OK);
 	
 	auth_session_t* cookie_session = NULL;
 	auth_account_t* cookie_account = NULL;
@@ -74,5 +74,5 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 
 	EXPECT_EQ(memcmp(account->uuid->bin, cookie_account->uuid->bin, 16), 0);
 
-	ASSERT_EQ(auth_log_access(conn, cookie_session->id, test_requester, "cookie-sign-in"), AUTH_OK);
+	ASSERT_EQ(auth_log_access(conn, cookie_session->id, test_request_log), AUTH_OK);
 }

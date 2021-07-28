@@ -48,28 +48,24 @@ void auth_account_free(auth_account_t** account) {
 	*account = NULL;
 }
 
-auth_requester_t* auth_requester_new(const string_t* ip, const string_t* path) {
-	auth_requester_t* rq = calloc(1, sizeof(auth_requester_t));
-
-	rq->ip = string_copy(ip);
-	rq->path = string_copy(path);
-	
+auth_request_log_t* auth_request_log_new() {
+	auth_request_log_t* rq = calloc(1, sizeof(auth_request_log_t));
 	return rq;
 }
 
-auth_requester_t* auth_requester_newl(const char* ip, const char* path) {
-	auth_requester_t* rq = calloc(1, sizeof(auth_requester_t));
+auth_request_log_t* auth_request_log_newl(const char* ip, const char* url) {
+	auth_request_log_t* rq = calloc(1, sizeof(auth_request_log_t));
 
 	rq->ip = string_new(ip, strlen(ip));
-	rq->path= string_new(path, strlen(path));
+	rq->url= string_new(url, strlen(url));
 
 	return rq;
 }
 
-void auth_requester_free(auth_requester_t** requester) {
+void auth_request_log_free(auth_request_log_t** requester) {
 	if(*requester == NULL) return;
 	string_free(&(*requester)->ip);
-	string_free(&(*requester)->path);
+	string_free(&(*requester)->url);
 	free(*requester);
 	*requester = NULL;
 }

@@ -83,12 +83,11 @@ auth_errors_t auth_make_free_session(PGconn* conn, const string_t* signature_key
  *
  * @param conn Connedtion to database
  * @param session_id Identifier of owning session.
- * @param requester Network requester.
- * @param status Status to be logged. Example: invalid_login
+ * @param request_log Log containing all information about request.
  *
  * @returns Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR.
  */
-auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const auth_requester_t* requester, const char* status);
+auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log);
 
 /**
  * @brief Registers account and creates a session.

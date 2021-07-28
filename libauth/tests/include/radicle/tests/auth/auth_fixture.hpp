@@ -91,13 +91,13 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 
 	protected:
 		PGconn* conn = NULL; /**< Fake connection to database. */
-		auth_requester_t* test_requester; /**< Common requester which can be used for unit tests. */
+		auth_request_log_t* test_request_log; /**< Common requester which can be used for unit tests. */
 
 		/**
 		 * @brief Initializes test_requester and calls RadicleTests::SetUp()
 		 */
 		void SetUp() override {
-			test_requester = auth_requester_newl("127.0.0.1", "/i/am/a/test");
+			test_request_log = auth_request_log_newl("127.0.0.1", "/i/am/a/test");
 			RadicleTests::SetUp();
 		}
 
@@ -114,7 +114,7 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			for(std::vector<auth_session_t*>::iterator iter = sessions.begin(); iter != sessions.end(); iter++) {
 				auth_session_free(iter.base());
 			}
-			auth_requester_free(&test_requester);
+			auth_request_log_free(&test_request_log);
 			RadicleTests::TearDown();
 		}
 

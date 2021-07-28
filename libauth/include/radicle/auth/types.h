@@ -79,36 +79,38 @@ auth_account_t* auth_account_new(uuid_t* uuid, string_t* email, string_t* passwo
 void auth_account_free(auth_account_t** account);
 
 /**
- * @brief Network Requester representation. Used for spam and misuse filtering.
+ * @brief Log of a request. Usable for monitoring api.
  *
- * @see auth_requester_new()
- * @see auth_requester_free()
+ * @see auth_request_log_new()
+ * @see auth_request_log_free()
  */
-typedef struct auth_requester {
+typedef struct auth_request_log {
 	string_t* ip; /**< Ip of requester. */
-       	string_t* path; /**< URL which was requested. */
-} auth_requester_t;
+	int port; /**< Port of requester. */
+	time_t date; /**< Time of request. */
+       	string_t* url; /**< URL which was requested. */
+	int response_time; /**< Time in milliseconds */
+	int response_code; /**< Code returned to requester. */
+	int internal_status; /**< Internal status code of request. */
+} auth_request_log_t;
 
 /**
  * @brief Creates a new auth_requester_t struct and copies string values.
  *
- * @param ip IP which was used by requester.
- * @param path URL which was requested.
- *
  * @returns Returns pointer to new \ref auth_requester_t.
  */
-auth_requester_t* auth_requester_new(const string_t* ip, const string_t* path);
+auth_request_log_t* auth_request_log_new();
 
 /**
  * @brief Creates a new auth_requester_t struct and copies literal string values.
  *
  * @param ip IP which was used by requester.
- * @param path URL which was requested.
+ * @param url URL which was requested.
  *
  * @returns Returns pointer to new \ref auth_requester_t.
  */
 
-auth_requester_t* auth_requester_newl(const char* ip, const char* path);
+auth_request_log_t* auth_request_log_newl(const char* ip, const char* url);
 
 /**
  * @brief Frees struct and points pointer to NULL.
@@ -117,7 +119,7 @@ auth_requester_t* auth_requester_newl(const char* ip, const char* path);
  *
  * @returns Returns void.
  */
-void auth_requester_free(auth_requester_t** requester);
+void auth_request_log_free(auth_request_log_t** requester);
 
 /**
  * Representation of a session cookie.
