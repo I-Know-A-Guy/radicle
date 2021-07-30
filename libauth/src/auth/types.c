@@ -50,16 +50,15 @@ void auth_account_free(auth_account_t** account) {
 
 auth_request_log_t* auth_request_log_new() {
 	auth_request_log_t* rq = calloc(1, sizeof(auth_request_log_t));
+	clock_gettime(CLOCK_MONOTONIC, &rq->timer);
 	return rq;
 }
 
-auth_request_log_t* auth_request_log_newl(const char* ip, const char* url) {
-	auth_request_log_t* rq = calloc(1, sizeof(auth_request_log_t));
-
-	rq->ip = string_new(ip, strlen(ip));
-	rq->url= string_new(url, strlen(url));
-
-	return rq;
+void auth_request_log_calculate_response_time(auth_request_log_t* request_log) {
+	struct timespec now = {0, 0};
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	request_log->response_time = (((double)now.tv_sec + 1.0e-9*now.tv_nsec) -
+	       	((double)request_log->timer.tv_sec + 1.0e-9*request_log->timer.tv_nsec)) * 1000000.0;
 }
 
 void auth_request_log_free(auth_request_log_t** requester) {
@@ -71,7 +70,7 @@ void auth_request_log_free(auth_request_log_t** requester) {
 }
 
 auth_cookie_t* auth_cookie_new_empty() {
-	return calloc(1, sizeof(auth_cookie_t));
+	return calloc(1, sizeof(auth_cookie_t));	
 }
 
 void auth_cookie_free(auth_cookie_t** cookie) {

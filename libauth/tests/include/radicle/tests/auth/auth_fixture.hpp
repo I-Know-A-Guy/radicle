@@ -96,7 +96,9 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 		 * @brief Initializes test_requester and calls RadicleTests::SetUp()
 		 */
 		void SetUp() override {
-			test_request_log = auth_request_log_newl("127.0.0.1", "/i/am/a/test");
+			test_request_log = auth_request_log_new();
+			test_request_log->ip = string_from_literal("127.0.0.1");
+			test_request_log->url = string_from_literal("/i/am/a/test");
 			RadicleTests::SetUp();
 		}
 

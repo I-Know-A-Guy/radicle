@@ -89,6 +89,7 @@ typedef struct auth_request_log {
 	int port; /**< Port of requester. */
 	time_t date; /**< Time of request. */
        	string_t* url; /**< URL which was requested. */
+	struct timespec timer; /**< Timer used for measuring response time. */
 	int response_time; /**< Time in milliseconds */
 	int response_code; /**< Code returned to requester. */
 	int internal_status; /**< Internal status code of request. */
@@ -102,15 +103,11 @@ typedef struct auth_request_log {
 auth_request_log_t* auth_request_log_new();
 
 /**
- * @brief Creates a new auth_requester_t struct and copies literal string values.
+ * @brief Calculates time since \ref auth_reqeust_log_new was called. Time is given in microseconds.
  *
- * @param ip IP which was used by requester.
- * @param url URL which was requested.
- *
- * @returns Returns pointer to new \ref auth_requester_t.
+ * @param request_log Log to calculate time for.
  */
-
-auth_request_log_t* auth_request_log_newl(const char* ip, const char* url);
+void auth_request_log_calculate_response_time(auth_request_log_t* request_log);
 
 /**
  * @brief Frees struct and points pointer to NULL.
