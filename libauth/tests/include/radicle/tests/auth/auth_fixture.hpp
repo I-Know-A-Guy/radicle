@@ -87,7 +87,6 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 
 	std::vector<auth_account_t*> accounts; /**< Account pointers which will be freed on TearDown() */
 	std::vector<auth_cookie_t*> cookies; /**< Cookie pointers which will be freed on TearDown() */
-	std::vector<auth_session_t*> sessions; /**< Session pointers which will be freed on TearDown() */
 
 	protected:
 		PGconn* conn = NULL; /**< Fake connection to database. */
@@ -110,9 +109,6 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			}
 			for(std::vector<auth_cookie_t*>::iterator iter = cookies.begin(); iter != cookies.end(); iter++) {
 				auth_cookie_free(iter.base());
-			}
-			for(std::vector<auth_session_t*>::iterator iter = sessions.begin(); iter != sessions.end(); iter++) {
-				auth_session_free(iter.base());
 			}
 			auth_request_log_free(&test_request_log);
 			RadicleTests::TearDown();
@@ -161,16 +157,6 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 		void take_cookie(auth_cookie_t* cookie) {
 			if(cookie == NULL) return;
 			cookies.push_back(cookie);
-		}
-
-		/**
-		 * @brief Takes ownership of session and frees it on TearDown()
-		 *
-		 * @param session Pointer to session to take ownership of.
-		 */
-		void take_session(auth_session_t* session) {
-			if(session == NULL) return;
-			sessions.push_back(session);
 		}
 
 		/**

@@ -62,13 +62,13 @@ TEST_F(RadicleAuthTests, TestGetAccountByEmail) {
 
 TEST_F(RadicleAuthTests, TestGetSessionAccountByCookie) {
 	install_fetch_session_hook();
-	auth_session_t* session = NULL;
+	uint32_t session_id = 0;
+	string_t* session_salt = NULL;
 	auth_account_t* account = NULL;
-	ASSERT_EQ(auth_get_session_by_cookie(conn, common_string, &session, &account), 0);
-	EXPECT_TRUE(session != NULL);
-	EXPECT_TRUE(session->salt != NULL);
-	EXPECT_GT(session->id, 0);
+	ASSERT_EQ(auth_get_session_by_cookie(conn, common_string, &session_id, &session_salt, &account), 0);
+	EXPECT_TRUE(session_id != 0);
+	EXPECT_TRUE(session_salt != NULL);
 	EXPECT_TRUE(account != NULL);
-	auth_session_free(&session);
+	string_free(&session_salt);
 	auth_account_free(&account);
 }

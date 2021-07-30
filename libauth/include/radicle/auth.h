@@ -137,7 +137,7 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
  * \ref auth_errors_t.AUTH_ACCOUNT_NOT_ACTIVE
  * @todo Replace auth_session_t with uint32_t, when calling this function, salt is of no use when going further
  */
-auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, auth_session_t** session, auth_account_t** account);
+auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, uint32_t* session_id, auth_account_t** account);
 
 #if defined(__cplusplus)
 }

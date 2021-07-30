@@ -84,14 +84,3 @@ void auth_cookie_free(auth_cookie_t** cookie) {
 	*cookie = NULL;
 }
 
-auth_session_t* auth_session_new() {
-	auth_session_t* buf = calloc(1, sizeof(auth_session_t));
-	return buf;
-}
-
-void auth_session_free(auth_session_t** session) {
-	if(*session == NULL) return;
-	string_free(&(*session)->salt);
-	free(*session);
-	*session = NULL;
-}

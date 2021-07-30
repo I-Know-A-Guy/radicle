@@ -151,27 +151,6 @@ auth_cookie_t* auth_cookie_new_empty();
  */
 void auth_cookie_free(auth_cookie_t** cookie);
 
-typedef struct auth_session {
-	uint32_t id;
-	string_t* salt;
-} auth_session_t;
-
-/**
- * @brief Creates new auth_session and initializes to NULL.
- *
- * @returns Returns new allocated \ref auth_session_t object.
- */
-auth_session_t* auth_session_new();
-
-/**
- * @brief Frees an allocated \ref auth_session_t and sets its pointer to NULL.
- *
- * @param session Pointer to session.
- *
- * @returns Returns Void.
- */
-void auth_session_free(auth_session_t** session);
-
 #if defined(__cplusplus)
 }
 #endif

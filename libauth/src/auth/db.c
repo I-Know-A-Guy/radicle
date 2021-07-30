@@ -149,7 +149,7 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 	return 0;
 }
 
-int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_session_t** session, auth_account_t** account) {
+int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* id, string_t** salt, auth_account_t** account) {
 	const char* stmt = "SELECT Sessions.id, Sessions.salt, Accounts.uuid, Accounts.email, Accounts.role, Accounts.verified, Accounts.active, Accounts.created" \
 			   " FROM Sessions LEFT JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
 			   " revoked=FALSE AND expires>$2::timestamp LIMIT 1";
@@ -166,9 +166,8 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_sessio
 	pgdb_params_free(&params);
 
 	if(PQntuples(result->pg) == 1) {
-		*session = auth_session_new();
-		pgdb_get_uint32(result, 0, "id", &(*session)->id);
-		pgdb_get_text(result, 0, "salt", &(*session)->salt);
+		pgdb_get_uint32(result, 0, "id", id);
+		pgdb_get_text(result, 0, "salt", salt);
 
 		if(pgdb_exists(result, "uuid", 0)) {
 			*account  = calloc(1, sizeof(auth_account_t));
@@ -181,6 +180,7 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_sessio
 			pgdb_get_timestamp(result, 0, "created", &(*account)->created);
 		}
 	} else {
+		*id = 0;
 		DEBUG("No rows for session\n");
 	}
 

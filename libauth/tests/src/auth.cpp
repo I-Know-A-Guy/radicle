@@ -63,16 +63,15 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 
 	ASSERT_EQ(auth_log_access(conn, session_id, test_request_log), AUTH_OK);
 	
-	auth_session_t* cookie_session = NULL;
+	uint32_t cookie_session_id = 0;
 	auth_account_t* cookie_account = NULL;
-	ASSERT_EQ(auth_verify_cookie(conn, key, signed_in_cookie->cookie, &cookie_session, &cookie_account), AUTH_OK) << signed_in_cookie->cookie->ptr;
-	take_session(cookie_session);
+	ASSERT_EQ(auth_verify_cookie(conn, key, signed_in_cookie->cookie, &cookie_session_id, &cookie_account), AUTH_OK) << signed_in_cookie->cookie->ptr;
 	take_account(cookie_account);
 
-	ASSERT_TRUE(cookie_session != NULL);
+	ASSERT_TRUE(cookie_session_id != 0);
 	ASSERT_TRUE(cookie_account != NULL);
 
 	EXPECT_EQ(memcmp(account->uuid->bin, cookie_account->uuid->bin, 16), 0);
 
-	ASSERT_EQ(auth_log_access(conn, cookie_session->id, test_request_log), AUTH_OK);
+	ASSERT_EQ(auth_log_access(conn, cookie_session_id, test_request_log), AUTH_OK);
 }

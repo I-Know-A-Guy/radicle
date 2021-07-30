@@ -105,29 +105,32 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 	return AUTH_OK;
 }
 
-auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, auth_session_t** session, auth_account_t** account) {
+auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, const string_t* cookie, uint32_t* session_id, auth_account_t** account) {
 	
 	auth_cookie_t* cookie_result;
 	if(auth_split_cookie(cookie, &cookie_result)) {
 		return AUTH_INVALID_COOKIE;
 	}
 
-	if(auth_get_session_by_cookie(conn, cookie_result->token, session, account)) {
+	string_t* session_salt = NULL;
+	if(auth_get_session_by_cookie(conn, cookie_result->token, session_id, &session_salt, account)) {
 		auth_cookie_free(&cookie_result);
 		return AUTH_ERROR;
 	}
 
-	if(*session == NULL) {
+	if(*session_id == 0) {
 		auth_cookie_free(&cookie_result);
 		return AUTH_COOKIE_NOT_FOUND;
 	}
 
-	if(hmac_verify_salted(signature_key, (*session)->salt, cookie_result->signature, cookie_result->token)) {
-		DEBUG("%s %s %s %s\n", signature_key->ptr, (*session)->salt->ptr, cookie_result->signature->ptr, cookie_result->token->ptr);
+	if(hmac_verify_salted(signature_key, session_salt, cookie_result->signature, cookie_result->token)) {
+		DEBUG("%s %s %s %s\n", signature_key->ptr, session_salt->ptr, cookie_result->signature->ptr, cookie_result->token->ptr);
+		string_free(&session_salt);
 		auth_cookie_free(&cookie_result);
 		auth_account_free(account);
 		return AUTH_INVALID_SIGNATURE;
 	}
+	string_free(&session_salt);
 	auth_cookie_free(&cookie_result);
 
 	if(*account == NULL) {

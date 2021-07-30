@@ -107,12 +107,13 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
  *
  * @param conn Connection to database.
  * @param cookie Token of cookie, which identifies it in database.
- * @param session Queried session id and salt. 
+ * @param id ID of queried session.
+ * @param salt Salt used for signature.
  * @param account Account to be set on valid cookie verification.
  * 
  * @returns Returns 0 on success.
  */
-int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, auth_session_t** session, auth_account_t** account);
+int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* id, string_t** salt, auth_account_t** account);
 
 #if defined(__cplusplus)
 }
