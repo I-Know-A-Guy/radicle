@@ -1,4 +1,4 @@
-find_package(PostgreSQL 13 REQUIRED)
+find_package(PostgreSQL 12 REQUIRED)
 
 target_sources(
 	radicle
