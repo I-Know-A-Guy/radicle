@@ -81,7 +81,7 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 
 	// There is no account linked to the email
 	// Do a fake hash to mislead email finder? what are they called?
-	if(account == NULL) {
+	if(*account == NULL) {
 		// TODO do a fake verify hash.
 		return AUTH_EMAIL_NOT_FOUND;
 	}
