@@ -128,6 +128,7 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
+		*account = NULL;
 		pgdb_params_free(&params);
 		return 1;
 	}
@@ -142,7 +143,9 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 		pgdb_get_bool(result, 0, "active", &(*account)->active);
 		pgdb_get_timestamp(result, 0, "created", &(*account)->created);
 		(*account)->email = string_copy(email);
-	} 
+	} else {
+	       *account = NULL;
+	}	       
 
 	pgdb_result_free(&result);
 

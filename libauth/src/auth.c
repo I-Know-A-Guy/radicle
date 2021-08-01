@@ -74,7 +74,6 @@ auth_errors_t auth_register(PGconn* conn, auth_account_t* account) {
 
 auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* password, auth_account_t** account) {
 		
-
 	if(auth_get_account_by_email(conn, email, account)) {
 		DEBUG("Failed to retrieve account.\n");
 		return AUTH_ERROR;
