@@ -51,6 +51,7 @@ if(BUILD_TESTING)
 endif()
 
 add_subdirectory(libcommon)
+add_subdirectory(libconfig)
 add_subdirectory(libpgdb)
 add_subdirectory(libauth)
 
