@@ -124,6 +124,7 @@ auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, co
 
 	if(hmac_verify_salted(signature_key, session_salt, cookie_result->signature, cookie_result->token)) {
 		DEBUG("%s %s %s %s\n", signature_key->ptr, session_salt->ptr, cookie_result->signature->ptr, cookie_result->token->ptr);
+		*session_id = 0;
 		string_free(&session_salt);
 		auth_cookie_free(&cookie_result);
 		auth_account_free(account);
