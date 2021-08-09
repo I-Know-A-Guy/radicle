@@ -136,14 +136,14 @@ auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, co
 		return AUTH_OK;
 	}
 
-	if((*account)->verified == false) {
-		auth_account_free(account);
-		return AUTH_ACCOUNT_NOT_VERIFIED;
-	}
-
 	if((*account)->active == false) {
 		auth_account_free(account);
 		return AUTH_ACCOUNT_NOT_ACTIVE;
+	}
+
+	if((*account)->verified == false) {
+		auth_account_free(account);
+		return AUTH_ACCOUNT_NOT_VERIFIED;
 	}
 
 	return AUTH_OK;
