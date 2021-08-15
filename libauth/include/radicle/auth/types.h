@@ -86,7 +86,7 @@ void auth_account_free(auth_account_t** account);
  */
 typedef struct auth_request_log {
 	string_t* ip; /**< Ip of requester. */
-	int port; /**< Port of requester. */
+	unsigned int port; /**< Port of requester. */
 	time_t date; /**< Time of request. */
        	string_t* url; /**< URL which was requested. */
 	struct timespec timer; /**< Timer used for measuring response time. */
