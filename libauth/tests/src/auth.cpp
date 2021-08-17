@@ -28,6 +28,7 @@
 
 #include <gtest/gtest.h>
 
+#include "radicle/auth/db.h"
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/auth.h"
 
@@ -37,9 +38,23 @@
 TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	string_t* email = manage_string("test-user@radicle.com");
 	string_t* password = manage_string("12345678");
-	auth_account_t* account = manage_account(email->ptr, password->ptr, "user", true);
+	auth_account_t* account = manage_account(email->ptr, password->ptr, "user", false);
 	ASSERT_EQ(auth_register(conn, account), AUTH_OK);
 	ASSERT_TRUE(account->uuid != NULL);
+
+	string_t* token = NULL;
+	ASSERT_EQ(auth_create_registration_token(conn, account->uuid, &token), 0);
+	ASSERT_TRUE(token != NULL);
+	take_string(token);
+
+	uuid_t* registration_owner = NULL;
+	ASSERT_EQ(auth_verify_and_remove_registration_token(conn, token, &registration_owner), 0);
+	ASSERT_TRUE(registration_owner != NULL);
+	take_uuid(registration_owner);
+
+	ASSERT_EQ(memcmp(account->uuid->bin, registration_owner->bin, 16), 0);
+
+	ASSERT_EQ(auth_update_account_verification_status(conn, registration_owner, true), 0);
 
 	auth_cookie_t* register_cookie = NULL;
 	string_t* key = manage_string("secret-key!");

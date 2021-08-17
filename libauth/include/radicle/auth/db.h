@@ -92,6 +92,41 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log);
 
 /**
+ * @brief Saves registration token to db and references owner.
+ *
+ * @param conn Connection to database.
+ * @param owner UUID of owner account.
+ * @param token Random registration token.
+ *
+ * @return Returns 0 on success
+ */
+int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token);
+
+/**
+ * @brief If token exists and is valid, owner param will be set. Furthermore,
+ * entry in database will be removed.
+ *
+ * @param conn Connection to database.
+ * @param token Verification token.
+ * @param owner Owner which will be set.
+ *
+ * @return Returns 0 on success. Owner only contains a value if token was valid.
+ */
+int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* token, uuid_t** owner);
+
+/**
+ * @brief Method to update account verification. Usually used after @ref
+ * auth_verify_and_remove_registration_token.
+ *
+ * @param conn Connection to database.
+ * @param account Account uuid to be updated.
+ * @param verified Value to be set in verified row.
+ *
+ * @return Returns 0 on success.
+ */
+int auth_update_account_verification_status(PGconn* conn, const uuid_t* account, bool verified);
+
+/**
  * @brief Retrieves account matching email, if none is found, \p account stays NULL.
  *
  * @param conn Connection to database.

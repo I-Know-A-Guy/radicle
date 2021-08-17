@@ -16,6 +16,10 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * @file
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -57,13 +61,9 @@ int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* tok
 	pgdb_bind_uuid(uuid, 0, params);
 	pgdb_bind_text(token, 1, params);
 
-	if(pgdb_execute_param(conn, stmt, params)) {
-		pgdb_params_free(&params);
-		return 1;
-	}
+	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
-
-	return 0;
+	return result;
 }
 
 int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, const time_t expires, const string_t* salt, uint32_t* id) {
@@ -111,14 +111,60 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 	pgdb_bind_uint32(request_log->response_code, 6, params);
 	pgdb_bind_uint32(request_log->internal_status, 7, params);
 
-	if(pgdb_execute_param(conn, stmt, params)) {
-		DEBUG("Failed to insert session access.\n");
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
+}
+
+int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token) {
+	const char* stmt = "INSERT INTO Registrations(account, created, token) VALUES($1::uuid, $2::timestamp, $3::text);";
+	pgdb_params_t* params = pgdb_params_new(3);
+	pgdb_bind_uuid(owner, 0, params);
+	pgdb_bind_timestamp(time(NULL), 1, params);
+	pgdb_bind_text(token, 2, params);
+
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
+}
+
+int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* token, uuid_t** owner) {
+	const char* stmt = "DELETE FROM Registrations WHERE token=$1::text RETURNING account;";
+	pgdb_params_t* params = pgdb_params_new(1);
+	pgdb_bind_text(token, 0, params);
+
+	pgdb_result_t* result = NULL;
+	if(pgdb_fetch_param(conn, stmt, params, &result)) {
 		pgdb_params_free(&params);
+		*owner = NULL;
 		return 1;
 	}
 
+	if(PQntuples(result->pg) == 1) {
+		if(pgdb_get_uuid(result, 0, "account", owner)) {
+			ERROR("Has result but no account column found?.\n");
+			pgdb_params_free(&params);
+			pgdb_result_free(&result);
+			*owner = NULL;
+			return 1;
+		}
+	}
+
 	pgdb_params_free(&params);
+	pgdb_result_free(&result);
+
 	return 0;
+}
+
+int auth_update_account_verification_status(PGconn* conn, const uuid_t* account, bool verified) {
+	const char* stmt = "UPDATE Accounts SET verified=$1::boolean WHERE uuid=$2::uuid;";
+	pgdb_params_t* params = pgdb_params_new(2);
+	pgdb_bind_bool(verified, 0, params);
+	pgdb_bind_uuid(account, 1, params);
+
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
 }
 
 int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_t** account) {
@@ -134,6 +180,7 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 	}
 	pgdb_params_free(&params);
 	
+	// @todo create helper function for this
 	if(PQntuples(result->pg) == 1) {
 		*account  = calloc(1, sizeof(auth_account_t));
 		pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid);

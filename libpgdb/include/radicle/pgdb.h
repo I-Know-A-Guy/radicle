@@ -200,6 +200,7 @@ int pgdb_transaction_rollback(PGconn* conn);
  * @returns Returns void.
  *
  * @todo Instead of adding, add counter to params, which increases by one everytime a bind_* function was called to it.
+ * @todo add correct types to params
  */
 void pgdb_bind_uint32(const int value, const int index, pgdb_params_t* params);
 

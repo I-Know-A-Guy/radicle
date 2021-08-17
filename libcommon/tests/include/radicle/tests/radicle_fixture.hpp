@@ -78,6 +78,20 @@ class RadicleTests: public ::testing::Test {
 	}
 
 	/**
+	 * @brief Takes ownership of existring string
+	 */
+	void take_string(string_t* string) {
+		strings.push_back(string);
+	}
+
+	/**
+	 * @brief Takes ownership of existring uuid 
+	 */
+	void take_uuid(uuid_t* uuid) {
+		uuids.push_back(uuid);
+	}
+
+	/**
 	 * @brief Tests if \ref string_t.ptr length matches given \ref string.length
 	 */
 	void test_string_len(string_t* buf) {

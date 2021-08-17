@@ -52,6 +52,24 @@ TEST_F(RadicleAuthTests, TestSaveSessionAccess) {
 	ASSERT_EQ(auth_save_session_access(conn, session_id, test_request_log), 0);
 }
 
+TEST_F(RadicleAuthTests, TestSaveRegistrationToken) {
+	install_execute_param_always_success();
+	ASSERT_EQ(auth_save_registration_token(conn, common_uuid, common_string), 0);
+}
+
+TEST_F(RadicleAuthTests, TestVerifyAndRemoveRegistrationToken) {
+	install_fetch_registration_account_uuid_hook();
+	uuid_t* owner = NULL;
+	ASSERT_EQ(auth_verify_and_remove_registration_token(conn, common_string, &owner), 0);
+	EXPECT_TRUE(owner != NULL);
+	uuid_free(&owner);
+}
+
+TEST_F(RadicleAuthTests, TestUpdateAccountVerification) {
+	install_execute_param_always_success();
+	ASSERT_EQ(auth_update_account_verification_status(conn, common_uuid, true), 0);
+}
+
 TEST_F(RadicleAuthTests, TestGetAccountByEmail) {
 	install_fetch_account_hook();
 	auth_account_t* queried = NULL;
