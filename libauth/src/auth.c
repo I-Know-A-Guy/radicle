@@ -73,7 +73,7 @@ auth_errors_t auth_register(PGconn* conn, auth_account_t* account) {
 }
 
 auth_errors_t auth_create_registration_token(PGconn* conn, const uuid_t* owner, string_t** token) {
-	if(auth_generate_random_base64(256, token)) 
+	if(auth_generate_random_base64_url_safe(256, token)) 
 		return AUTH_ERROR;
 
 	if(auth_save_registration(conn, owner, *token)) {
