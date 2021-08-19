@@ -192,6 +192,8 @@ int auth_generate_random_base64_url_safe(const int rand_bytes, string_t** buffer
 			(*buffer)->ptr[i] = '-';
 		else if(c == '/')
 			(*buffer)->ptr[i] = '_';
+		else if(c == '=')
+			(*buffer)->ptr[i] = '-';
 	}
 	return 0;
 }
