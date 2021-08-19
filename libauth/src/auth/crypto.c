@@ -183,6 +183,19 @@ int auth_generate_random_base64(const int rand_bytes, string_t** buffer) {
 	return 0;
 }
 
+int auth_generate_random_base64_url_safe(const int rand_bytes, string_t** buffer) {
+	int result = auth_generate_random_base64(rand_bytes, buffer);
+	if(result) return result;
+	for(int i = 0; i < (*buffer)->length; i++) {
+		char c = (*buffer)->ptr[i];
+		if(c == '+')
+			(*buffer)->ptr[i] = '-';
+		else if(c == '/')
+			(*buffer)->ptr[i] = '_';
+	}
+	return 0;
+}
+
 int auth_generate_session_cookie(const string_t* key, auth_cookie_t** cookie) {
 
 	*cookie = auth_cookie_new_empty();

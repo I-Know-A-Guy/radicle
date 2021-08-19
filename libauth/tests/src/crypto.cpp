@@ -30,6 +30,14 @@ TEST(AuthCryptoTests, TestRandomBase64) {
 	string_free(&buffer);
 }
 
+TEST(AuthCryptoTests, TestRandomBase64UrlSafe) {
+	string_t* buffer = NULL;
+	ASSERT_EQ(auth_generate_random_base64_url_safe(256, &buffer), 0);
+	EXPECT_GE(buffer->length, 256);
+	EXPECT_EQ(strlen(buffer->ptr), buffer->length);
+	string_free(&buffer);
+}
+
 class AuthCryptoBase64Test: public ::testing::Test {
 	public:
 		string_t* raw = NULL;

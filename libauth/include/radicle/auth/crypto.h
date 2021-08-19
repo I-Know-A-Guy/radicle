@@ -78,6 +78,17 @@ int auth_split_cookie(const string_t* cookie,  auth_cookie_t** result);
 int auth_generate_random_base64(const int rand_bytes, string_t** buffer);
 
 /**
+ * Generates a secure random session id and converts it to base64 url safe.
+ *
+ * @param rand_bytes Length to use for generating random bytes. buffer will not be of this length, due to the convertion to base64.
+ * @param buffer Double pointer to char buffer, resulting base64 char array will be stored here.
+ * @param buffer_length Length of buffer base64 string. 
+ *
+ * @returns 0 on success
+ */
+int auth_generate_random_base64_url_safe(const int rand_bytes, string_t** buffer);
+
+/**
  * @brief Creates a hash using Argon2i.
  *
  * @param password Raw password string.
