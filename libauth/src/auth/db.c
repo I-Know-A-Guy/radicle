@@ -34,11 +34,11 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 	pgdb_result_t* result = NULL;
 	pgdb_params_t* params = pgdb_params_new(5);
 
-	pgdb_bind_text(account->email, 0, params);
-	pgdb_bind_text(account->password, 1, params);
-	pgdb_bind_text(account->role, 2, params);
-	pgdb_bind_bool(account->verified, 3, params);
-	pgdb_bind_timestamp(time(NULL), 4, params);
+	pgdb_bind_text(account->email, params);
+	pgdb_bind_text(account->password, params);
+	pgdb_bind_text(account->role, params);
+	pgdb_bind_bool(account->verified, params);
+	pgdb_bind_timestamp(time(NULL), params);
 
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
 		pgdb_params_free(&params);
@@ -58,8 +58,8 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* token) {
 	const char* stmt = "INSERT INTO Registrations(account, created, token) VALUES($1::uuid, now(), $2::text);";
 	pgdb_params_t* params = pgdb_params_new(2);
-	pgdb_bind_uuid(uuid, 0, params);
-	pgdb_bind_text(token, 1, params);
+	pgdb_bind_uuid(uuid, params);
+	pgdb_bind_text(token, params);
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -71,12 +71,12 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 	const char* stmt = "INSERT INTO Sessions(owner, token, created, expires, revoked, salt) VALUES($1::uuid, $2::text, $3::timestamp, $4::timestamp, FALSE, $5::text) RETURNING id;";
 	pgdb_params_t* params = pgdb_params_new(5);
 	if(owner != NULL) {
-		pgdb_bind_uuid(owner, 0, params);
+		pgdb_bind_uuid(owner, params);
 	}
-	pgdb_bind_text(token, 1, params);
-	pgdb_bind_timestamp(time(NULL), 2, params);
-	pgdb_bind_timestamp(expires, 3, params);
-	pgdb_bind_text(salt, 4, params);
+	pgdb_bind_text(token, params);
+	pgdb_bind_timestamp(time(NULL), params);
+	pgdb_bind_timestamp(expires, params);
+	pgdb_bind_text(salt, params);
 
 	pgdb_result_t* result = NULL;
 
@@ -102,14 +102,14 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 			   "VALUES($1::int4, $2::text, $3::int4, $4::timestamp, $5::text, $6::int4, $7::int4, $8::int4);";
 	pgdb_params_t* params = pgdb_params_new(8);
 
-	pgdb_bind_uint32(session_id, 0, params);
-	pgdb_bind_text(request_log->ip, 1, params);
-	pgdb_bind_uint32(request_log->port, 2, params);
-	pgdb_bind_timestamp(request_log->date, 3, params);
-	pgdb_bind_text(request_log->url, 4, params);
-	pgdb_bind_uint32(request_log->response_time, 5, params);
-	pgdb_bind_uint32(request_log->response_code, 6, params);
-	pgdb_bind_uint32(request_log->internal_status, 7, params);
+	pgdb_bind_uint32(session_id, params);
+	pgdb_bind_text(request_log->ip, params);
+	pgdb_bind_uint32(request_log->port, params);
+	pgdb_bind_timestamp(request_log->date, params);
+	pgdb_bind_text(request_log->url, params);
+	pgdb_bind_uint32(request_log->response_time, params);
+	pgdb_bind_uint32(request_log->response_code, params);
+	pgdb_bind_uint32(request_log->internal_status, params);
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -119,9 +119,9 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token) {
 	const char* stmt = "INSERT INTO Registrations(account, created, token) VALUES($1::uuid, $2::timestamp, $3::text);";
 	pgdb_params_t* params = pgdb_params_new(3);
-	pgdb_bind_uuid(owner, 0, params);
-	pgdb_bind_timestamp(time(NULL), 1, params);
-	pgdb_bind_text(token, 2, params);
+	pgdb_bind_uuid(owner, params);
+	pgdb_bind_timestamp(time(NULL), params);
+	pgdb_bind_text(token, params);
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -131,7 +131,7 @@ int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string
 int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* token, uuid_t** owner) {
 	const char* stmt = "DELETE FROM Registrations WHERE token=$1::text RETURNING account;";
 	pgdb_params_t* params = pgdb_params_new(1);
-	pgdb_bind_text(token, 0, params);
+	pgdb_bind_text(token, params);
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
@@ -159,8 +159,8 @@ int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* toke
 int auth_update_account_verification_status(PGconn* conn, const uuid_t* account, bool verified) {
 	const char* stmt = "UPDATE Accounts SET verified=$1::boolean WHERE uuid=$2::uuid;";
 	pgdb_params_t* params = pgdb_params_new(2);
-	pgdb_bind_bool(verified, 0, params);
-	pgdb_bind_uuid(account, 1, params);
+	pgdb_bind_bool(verified, params);
+	pgdb_bind_uuid(account, params);
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -170,7 +170,7 @@ int auth_update_account_verification_status(PGconn* conn, const uuid_t* account,
 int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_t** account) {
 	const char* stmt = "SELECT uuid, password, role, verified, active, created FROM Accounts WHERE email = $1::text";
 	pgdb_params_t* params = pgdb_params_new(1);
-	pgdb_bind_text(email, 0, params);
+	pgdb_bind_text(email, params);
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
@@ -204,8 +204,8 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* i
 			   " FROM Sessions LEFT JOIN Accounts ON Accounts.uuid = Sessions.owner WHERE Sessions.token=$1 AND" \
 			   " revoked=FALSE AND expires>$2::timestamp LIMIT 1";
 	pgdb_params_t* params = pgdb_params_new(2);
-	pgdb_bind_text(cookie, 0, params);
-	pgdb_bind_timestamp(time(NULL), 1, params);
+	pgdb_bind_text(cookie, params);
+	pgdb_bind_timestamp(time(NULL), params);
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {

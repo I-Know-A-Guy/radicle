@@ -68,7 +68,7 @@ TEST(PGDBParamsTest, TestParamsNew) {
 
 TEST(PGDBParamsTest, TestBindInt) {
 	pgdb_params_t* params = pgdb_params_new(1);
-	pgdb_bind_uint32(5, 0, params);
+	pgdb_bind_uint32(5, params);
 	EXPECT_EQ(params->lengths[0], sizeof(uint32_t));
 	pgdb_params_free(&params);
 }

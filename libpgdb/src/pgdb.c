@@ -17,6 +17,7 @@
  */
 
 #include <libpq-fe.h>
+#include <postgres_ext.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -165,54 +166,60 @@ int pgdb_transaction_rollback(PGconn* conn) {
 	return pgdb_execute(conn, "ROLLBACK;");
 }
 
-void pgdb_bind_uint32(int value, int index, pgdb_params_t* params) {
+void pgdb_bind_uint32(int value, pgdb_params_t* params) {
 	uint32_t* buffer = malloc(sizeof(uint32_t));
 	*buffer = htonl((uint32_t)value);
 
-	params->values[index] = (char*)buffer;
-	params->lengths[index] = sizeof(uint32_t);
-	params->formats[index] = 1;
+	params->values[params->next_index] = (char*)buffer;
+	params->lengths[params->next_index] = sizeof(uint32_t);
+	params->formats[params->next_index] = 1;
+	params->next_index++;
 }
 
-void pgdb_bind_uint64(const uint64_t value, const int index, pgdb_params_t* params) {
+void pgdb_bind_uint64(const uint64_t value, pgdb_params_t* params) {
 	uint32_t* buffer = malloc(sizeof(uint64_t));
 	*buffer = htonll((uint64_t)(value));
 
-	params->values[index] = (char*)buffer;
-	params->lengths[index] = sizeof(uint64_t);
-	params->formats[index] = 1;
+	params->values[params->next_index] = (char*)buffer;
+	params->lengths[params->next_index] = sizeof(uint64_t);
+	params->formats[params->next_index] = 1;
+	params->next_index++;
 }
 
-void pgdb_bind_text(const string_t* text, int index, pgdb_params_t* params) {
-	params->lengths[index] = text->length;
-	params->values[index] = calloc(text->length, sizeof(char));
-	params->formats[index] = 1;
+void pgdb_bind_text(const string_t* text, pgdb_params_t* params) {
+	params->lengths[params->next_index] = text->length;
+	params->values[params->next_index] = calloc(text->length, sizeof(char));
+	params->formats[params->next_index] = 1;
 
-	memcpy(params->values[index], text->ptr, text->length);
+	memcpy(params->values[params->next_index], text->ptr, text->length);
+	params->next_index++;
 }
 
-void pgdb_bind_uuid(const uuid_t* uuid, int index, pgdb_params_t* params) {
-	params->lengths[index] = 16;
-	params->values[index] = calloc(16, sizeof(char));
-	params->formats[index] = 1;
+void pgdb_bind_uuid(const uuid_t* uuid, pgdb_params_t* params) {
+	params->lengths[params->next_index] = 16;
+	params->values[params->next_index] = calloc(16, sizeof(char));
+	params->formats[params->next_index] = 1;
 
-	memcpy(params->values[index], (char*)uuid->bin, 16);
+	memcpy(params->values[params->next_index], (char*)uuid->bin, 16);
+	params->next_index++;
 }
 
-void pgdb_bind_bool(const bool flag, const int index, pgdb_params_t* params) {
-	params->lengths[index] = 1;
-	params->values[index] = calloc(1, sizeof(char));
-	params->formats[index] = 1;
+void pgdb_bind_bool(const bool flag, pgdb_params_t* params) {
+	params->lengths[params->next_index] = 1;
+	params->values[params->next_index] = calloc(1, sizeof(char));
+	params->formats[params->next_index] = 1;
 
-	memcpy(params->values[index], &flag, 1);
+	memcpy(params->values[params->next_index], &flag, 1);
+	params->next_index++;
 }
 
-void pgdb_bind_timestamp(const time_t timestamp, const int index, pgdb_params_t* params) {
+void pgdb_bind_timestamp(const time_t timestamp, pgdb_params_t* params) {
 	time_t * buffer = malloc(sizeof(time_t));
 	*buffer = htonll(pgdb_convert_to_pg_timestamp(timestamp));
-	params->values[index] = (char*)buffer;
-	params->lengths[index] = sizeof(time_t);
-	params->formats[index] = 1;
+	params->values[params->next_index] = (char*)buffer;
+	params->lengths[params->next_index] = sizeof(time_t);
+	params->formats[params->next_index] = 1;
+	params->next_index++;
 }
 
 int pgdb_get_text(const pgdb_result_t* result, const int row, const char* field, string_t** buffer) {

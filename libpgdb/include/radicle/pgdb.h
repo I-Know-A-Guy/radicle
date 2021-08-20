@@ -25,7 +25,6 @@
  */
 #ifndef RADICLE_PGDB_INCLUDE_RADICLE_PGDB_H
 #define RADICLE_PGDB_INCLUDE_RADICLE_PGDB_H
-
 #include <stdbool.h>
 #include <time.h>
 
@@ -58,6 +57,7 @@ typedef struct pgdb_params {
 	char** values; /**< Actaul values to send. */
 	int* lengths; /**< Length of values. */
 	int* formats; /**< Format of values, either 0 for text or 1 for binary. */
+	int next_index; /**< When binding values, this will increase by one and specify next index of next param. */
 } pgdb_params_t;
 
 /**
@@ -194,48 +194,43 @@ int pgdb_transaction_rollback(PGconn* conn);
  * @brief Binds int32 to query.
  *
  * @param value Value to bind. 
- * @param index Index to use in arrays.
  * @param param \ref pgdb_params_t struct to use for binding.
  *
  * @returns Returns void.
  *
  * @todo Instead of adding, add counter to params, which increases by one everytime a bind_* function was called to it.
- * @todo add correct types to params
  */
-void pgdb_bind_uint32(const int value, const int index, pgdb_params_t* params);
+void pgdb_bind_uint32(const int value, pgdb_params_t* params);
 
 /**
  * @brief Binds timestamp to query.
  *
  * @param value Value to bind. 
- * @param index Index to use in arrays.
  * @param param \ref pgdb_params_t struct to use for binding.
  *
  * @returns Returns void.
  */
-void pgdb_bind_uint64(const uint64_t value, const int index, pgdb_params_t* params);
+void pgdb_bind_uint64(const uint64_t value, pgdb_params_t* params);
 
 /**
  * @brief Binds text to query.
  *
  * @param text Pointer to text. 
- * @param index Index to use in arrays.
  * @param param \ref pgdb_params_t struct to use for binding.
  *
  * @returns Returns void. 
  */
-void pgdb_bind_text(const string_t* text, const int index, pgdb_params_t* params);
+void pgdb_bind_text(const string_t* text, pgdb_params_t* params);
 
 /**
  * @brief Binds uuid to query.
  *
  * @param uuid Pointer to uuid to bind. 
- * @param index Index to use in arrays.
  * @param param \ref pgdb_params_t struct to use for binding.
  *
  * @returns Returns void. 
  */
-void pgdb_bind_uuid(const uuid_t* text, const int index, pgdb_params_t* params);
+void pgdb_bind_uuid(const uuid_t* text, pgdb_params_t* params);
 
 /**
  * @brief Binds boolean to query.
@@ -246,7 +241,7 @@ void pgdb_bind_uuid(const uuid_t* text, const int index, pgdb_params_t* params);
  *
  * @returns Returns void. 
  */
-void pgdb_bind_bool(const bool flag, const int index, pgdb_params_t* params);
+void pgdb_bind_bool(const bool flag, pgdb_params_t* params);
 
 /**
  * @brief Binds timestamp to query.
@@ -257,7 +252,7 @@ void pgdb_bind_bool(const bool flag, const int index, pgdb_params_t* params);
  *
  * @returns Returns void. 
  */
-void pgdb_bind_timestamp(const time_t timestamp, const int index, pgdb_params_t* params);
+void pgdb_bind_timestamp(const time_t timestamp, pgdb_params_t* params);
 
 /**
  * @brief Retrieves a text value and writes it to buffer.
