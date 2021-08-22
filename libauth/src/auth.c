@@ -98,19 +98,14 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 		return AUTH_EMAIL_NOT_FOUND;
 	}
 
-	if(!(*account)->verified) {
+	if(auth_verify_password((*account)->password, password)) {
 		auth_account_free(account);
-		return AUTH_ACCOUNT_NOT_VERIFIED;
+		return AUTH_INVALID_PASSWORD;
 	}
 
 	if(!(*account)->active) {
 		auth_account_free(account);
 		return AUTH_ACCOUNT_NOT_ACTIVE;
-	}
-	
-	if(auth_verify_password((*account)->password, password)) {
-		auth_account_free(account);
-		return AUTH_INVALID_PASSWORD;
 	}
 
 	return AUTH_OK;
@@ -152,11 +147,6 @@ auth_errors_t auth_verify_cookie(PGconn* conn, const string_t* signature_key, co
 	if((*account)->active == false) {
 		auth_account_free(account);
 		return AUTH_ACCOUNT_NOT_ACTIVE;
-	}
-
-	if((*account)->verified == false) {
-		auth_account_free(account);
-		return AUTH_ACCOUNT_NOT_VERIFIED;
 	}
 
 	return AUTH_OK;
