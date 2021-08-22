@@ -70,9 +70,10 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 
 	const char* stmt = "INSERT INTO Sessions(owner, token, created, expires, revoked, salt) VALUES($1::uuid, $2::text, $3::timestamp, $4::timestamp, FALSE, $5::text) RETURNING id;";
 	pgdb_params_t* params = pgdb_params_new(5);
-	if(owner != NULL) {
+	if(owner != NULL)
 		pgdb_bind_uuid(owner, params);
-	}
+	else
+		pgdb_bind_null(params);
 	pgdb_bind_text(token, params);
 	pgdb_bind_timestamp(time(NULL), params);
 	pgdb_bind_timestamp(expires, params);

@@ -191,14 +191,16 @@ int pgdb_transaction_commit(PGconn* conn);
 int pgdb_transaction_rollback(PGconn* conn);
 
 /**
+ * @binds NULL to query and increases next param index.
+ */
+void pgdb_bind_null(pgdb_params_t* params);
+/**
  * @brief Binds int32 to query.
  *
  * @param value Value to bind. 
  * @param param \ref pgdb_params_t struct to use for binding.
  *
  * @returns Returns void.
- *
- * @todo Instead of adding, add counter to params, which increases by one everytime a bind_* function was called to it.
  */
 void pgdb_bind_uint32(const int value, pgdb_params_t* params);
 
