@@ -130,7 +130,7 @@ int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string
 }
 
 int auth_revoke_registration_tokens(PGconn* conn, const uuid_t* owner) {
-	const char* stmt = "DELETE FROM Registrations WHERE uuid=$1::uuid;";
+	const char* stmt = "DELETE FROM Registrations WHERE account=$1::uuid;";
 	pgdb_params_t* params = pgdb_params_new(1);
 	pgdb_bind_uuid(owner, params);
 	int result = pgdb_execute_param(conn, stmt, params);
