@@ -103,6 +103,16 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token);
 
 /**
+ * @brief Deletes all registration tokens linked to owner.
+ *
+ * @param conn Connection to database.
+ * @param owner Owner of registration tokens
+ *
+ * @return Returns 0 on success.
+ */
+int auth_revoke_registration_tokens(PGconn* conn, const uuid_t* owner);
+
+/**
  * @brief If token exists and is valid, owner param will be set. Furthermore,
  * entry in database will be removed.
  *
