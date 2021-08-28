@@ -43,13 +43,15 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	ASSERT_TRUE(account->uuid != NULL);
 
 	string_t* token = NULL;
-	ASSERT_EQ(auth_create_registration_token(conn, account->uuid, &token), 0);
+	ASSERT_EQ(auth_create_token(conn, account->uuid, REGISTRATION, &token), 0);
 	ASSERT_TRUE(token != NULL);
 	take_string(token);
 
 	uuid_t* registration_owner = NULL;
-	ASSERT_EQ(auth_verify_and_remove_registration_token(conn, token, &registration_owner), 0);
+	token_type_t token_type;
+	ASSERT_EQ(auth_verify_token(conn, token, &registration_owner, &token_type), 0);
 	ASSERT_TRUE(registration_owner != NULL);
+	ASSERT_EQ(token_type, REGISTRATION);
 	take_uuid(registration_owner);
 
 	ASSERT_EQ(memcmp(account->uuid->bin, registration_owner->bin, 16), 0);

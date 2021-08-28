@@ -34,11 +34,6 @@ TEST_F(RadicleAuthTests, TestSaveAccount) {
 	ASSERT_EQ(auth_save_account(conn, account, &account->uuid), 0);
 }
 
-TEST_F(RadicleAuthTests, TestSaveRegistration) {
-	install_execute_param_always_success();
-	ASSERT_EQ(auth_save_registration(conn, common_uuid, common_string), 0);
-}
-
 TEST_F(RadicleAuthTests, TestSaveSession) {
 	install_fetch_id_hook();
 	uint32_t id = 0;
@@ -52,16 +47,18 @@ TEST_F(RadicleAuthTests, TestSaveSessionAccess) {
 	ASSERT_EQ(auth_save_session_access(conn, session_id, test_request_log), 0);
 }
 
-TEST_F(RadicleAuthTests, TestSaveRegistrationToken) {
+TEST_F(RadicleAuthTests, TestSaveToken) {
 	install_execute_param_always_success();
-	ASSERT_EQ(auth_save_registration_token(conn, common_uuid, common_string), 0);
+	ASSERT_EQ(auth_save_token(conn, common_uuid, common_string, REGISTRATION), 0);
 }
 
-TEST_F(RadicleAuthTests, TestVerifyAndRemoveRegistrationToken) {
-	install_fetch_registration_account_uuid_hook();
+TEST_F(RadicleAuthTests, TestVerifyToken) {
+	install_fetch_token_hook();
 	uuid_t* owner = NULL;
-	ASSERT_EQ(auth_verify_and_remove_registration_token(conn, common_string, &owner), 0);
+	token_type_t token;
+	ASSERT_EQ(auth_verify_token(conn, common_string, &owner, &token), 0);
 	EXPECT_TRUE(owner != NULL);
+	EXPECT_NE(token, -1);
 	uuid_free(&owner);
 }
 

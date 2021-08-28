@@ -199,6 +199,13 @@ void pgdb_bind_text(const string_t* text, pgdb_params_t* params) {
 	params->next_index++;
 }
 
+void pgdb_bind_c_str(const char* text, pgdb_params_t* params) {
+	params->lengths[params->next_index] = strlen(text);
+	params->values[params->next_index] = strdup(text);
+	params->formats[params->next_index] = 1;
+	params->next_index++;
+}
+
 void pgdb_bind_uuid(const uuid_t* uuid, pgdb_params_t* params) {
 	params->lengths[params->next_index] = 16;
 	params->values[params->next_index] = calloc(16, sizeof(char));
@@ -285,6 +292,16 @@ int pgdb_get_uuid(const pgdb_result_t* result, const int row, const char* field,
 		return 1;
 	}
 	*buf = uuid_new((unsigned char*)PQgetvalue(result->pg, row, column));
+	return 0;
+}
+
+int pgdb_get_enum(const pgdb_result_t* result, const int row, const char* field, int(*conv)(const char*), int* buffer) {
+	int column = PQfnumber(result->pg, field);
+	if(column == -1 || PQgetisnull(result->pg, row, column)) {
+		*buffer = -1;
+		return 1;
+	}
+	*buffer = conv(PQgetvalue(result->pg, row, column));
 	return 0;
 }
 

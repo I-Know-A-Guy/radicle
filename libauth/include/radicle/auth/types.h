@@ -41,6 +41,7 @@ extern "C" {
 
 /**
  * @brief Struct which represents a row in the Account table.
+ * @todo enum for role
  *
  * @see auth_account_new()
  * @see auth_account_free()
@@ -147,6 +148,14 @@ auth_cookie_t* auth_cookie_new_empty();
  * @returns Returns void.
  */
 void auth_cookie_free(auth_cookie_t** cookie);
+
+typedef enum token_type {
+	REGISTRATION, /**< Token is used for verifying registration. */
+	PASSWORD_RESET /**< Token is used for granting password reset rights. */
+} token_type_t;
+
+int token_type_from_str(const char* type);
+const char* token_type_to_str(token_type_t type);
 
 #if defined(__cplusplus)
 }

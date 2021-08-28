@@ -56,15 +56,15 @@ extern "C" {
 int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid);
 
 /**
- * @brief Inserts registartion with token which will be needed to verify.
+ * @brief Inserts token into database
  *
  * @param conn Connection to database.
- * @param uuid UUID of account to be verified.
+ * @param owner Owner of token
  * @param token Random token which will be sent via email.
  *
  * @returns Returns 0 on success.
  */
-int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* token);
+int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type);
 
 /**
  * @brief Saves session to database and returns its row id.
@@ -92,25 +92,15 @@ int auth_save_session(PGconn* conn, const uuid_t* owner, const string_t* token, 
 int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth_request_log_t* request_log);
 
 /**
- * @brief Saves registration token to db and references owner.
- *
- * @param conn Connection to database.
- * @param owner UUID of owner account.
- * @param token Random registration token.
- *
- * @return Returns 0 on success
- */
-int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token);
-
-/**
  * @brief Deletes all registration tokens linked to owner.
  *
  * @param conn Connection to database.
  * @param owner Owner of registration tokens
+ * @param type Type of token to be removed
  *
  * @return Returns 0 on success.
  */
-int auth_revoke_registration_tokens(PGconn* conn, const uuid_t* owner);
+int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t type);
 
 /**
  * @brief If token exists and is valid, owner param will be set. Furthermore,
@@ -122,7 +112,7 @@ int auth_revoke_registration_tokens(PGconn* conn, const uuid_t* owner);
  *
  * @return Returns 0 on success. Owner only contains a value if token was valid.
  */
-int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* token, uuid_t** owner);
+int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token_type_t* type);
 
 /**
  * @brief Method to update account verification. Usually used after @ref

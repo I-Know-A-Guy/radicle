@@ -49,7 +49,7 @@ int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_par
  * @brief Fake function which returns an object containing one row with column
  * account.
  */
-int pgdb_fetch_param_fake_registration_account_uuid(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
+int pgdb_fetch_param_fake_token(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result);
 
 /**
  * @brief Fake function which returns every column of a owned session. 
@@ -189,8 +189,8 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			return buf;
 		}
 
-		subhook_t install_fetch_registration_account_uuid_hook() {
-			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_registration_account_uuid, SUBHOOK_64BIT_OFFSET);
+		subhook_t install_fetch_token_hook() {
+			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_token, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

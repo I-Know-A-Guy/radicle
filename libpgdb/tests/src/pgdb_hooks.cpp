@@ -55,6 +55,10 @@ int set_fake_text(PGresult* result, const int row, const int column) {
 	return set_fake_value(result, row, column, (char*) txt, strlen(txt));
 }
 
+int set_fake_c_str(PGresult* result, const int row, const int column, const char* txt) {
+	return set_fake_value(result, row, column, (char*) txt, strlen(txt));
+}
+
 int set_fake_bool(PGresult* result, const int row, const int column, bool value) {
 	return set_fake_value(result, row, column, (char*)&value, 1);
 }

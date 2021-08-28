@@ -102,15 +102,16 @@ auth_errors_t auth_register(PGconn* conn, auth_account_t* account);
 
 
 /**
- * @brief Creates and saves registration token assocaiated with \p owner.
+ * @brief Creates and saves token.
  *
  * @param conn Connection to database.
- * @param owner  Owner of registartion.
+ * @param owner  Owner of token.
+ * @param type Type of token
  * @param token Token which will be created and is ready to be send via email.
  *
  * @return Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR
  */
-auth_errors_t auth_create_registration_token(PGconn* conn, const uuid_t* owner, string_t** token);
+auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, token_type_t type, string_t** token);
 
 /**
  * @brief Tries to sign in using the given email and password combination. 

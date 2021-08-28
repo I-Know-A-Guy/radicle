@@ -225,6 +225,16 @@ void pgdb_bind_uint64(const uint64_t value, pgdb_params_t* params);
 void pgdb_bind_text(const string_t* text, pgdb_params_t* params);
 
 /**
+ * @brief Binds text to query.
+ *
+ * @param text C string. 
+ * @param param \ref pgdb_params_t struct to use for binding.
+ *
+ * @returns Returns void. 
+ */
+void pgdb_bind_c_str(const char* text, pgdb_params_t* params);
+
+/**
  * @brief Binds uuid to query.
  *
  * @param uuid Pointer to uuid to bind. 
@@ -328,6 +338,21 @@ int pgdb_get_timestamp(const pgdb_result_t* result, const int row, const char* f
  * @returns Returns 1 if value is NULL, otherwise 0 for success.
  */
 int pgdb_get_uuid(const pgdb_result_t* result, const int row, const char* field, uuid_t** uuid);
+
+/**
+ * @brief Retrieves textual representation of enum and converts it to int using
+ * the given function.
+ *
+ * @param result \ref pgdb_params_t containing query result. 
+ * @param row Row index of data.
+ * @param field Name of the column.
+ * @param func Function which converts c str to int
+ * @param buffer Buffer to write to.
+ *
+ * @returns Returns 1 if value is NULL, otherwise 0 for success. Sets buffer to
+ * -1 if it wasnt found
+ */
+int pgdb_get_enum(const pgdb_result_t* result, const int row, const char* field, int(*conv)(const char*), int* buffer);
 
 /**
  * @brief Checks if a column is given and field is not NULL.

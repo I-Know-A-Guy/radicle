@@ -30,7 +30,7 @@
 #include "radicle/auth/db.h"
 
 int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid) {
-	const char* stmt = "INSERT INTO Accounts(uuid, email, password, role, verified, created, active) VALUES(gen_random_uuid(), $1::text, $2::text, $3::role, $4::boolean, $5::timestamp, TRUE) RETURNING uuid;";
+	const char* stmt = "INSERT INTO Accounts(uuid, email, password, role, verified, created, active) VALUES(gen_random_uuid(), $1::text, $2::text, $3::ACCOUNTS_ROLE, $4::boolean, $5::timestamp, TRUE) RETURNING uuid;";
 	pgdb_result_t* result = NULL;
 	pgdb_params_t* params = pgdb_params_new(5);
 
@@ -55,11 +55,12 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 	return 0;
 }
 
-int auth_save_registration(PGconn* conn, const uuid_t* uuid, const string_t* token) {
-	const char* stmt = "INSERT INTO Registrations(account, created, token) VALUES($1::uuid, now(), $2::text);";
-	pgdb_params_t* params = pgdb_params_new(2);
-	pgdb_bind_uuid(uuid, params);
+int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type) {
+	const char* stmt = "INSERT INTO Tokens(owner, created, token, type) VALUES($1::uuid, now(), $2::text, $3::TOKEN_TYPE);";
+	pgdb_params_t* params = pgdb_params_new(3);
+	pgdb_bind_uuid(owner, params);
 	pgdb_bind_text(token, params);
+	pgdb_bind_c_str(token_type_to_str(type), params);
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -117,29 +118,18 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 	return result;
 }
 
-int auth_save_registration_token(PGconn* conn, const uuid_t* owner, const string_t* token) {
-	const char* stmt = "INSERT INTO Registrations(account, created, token) VALUES($1::uuid, $2::timestamp, $3::text);";
-	pgdb_params_t* params = pgdb_params_new(3);
+int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t type) {
+	const char* stmt = "DELETE FROM Tokens WHERE owner=$1::uuid and type=$2::text;";
+	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_uuid(owner, params);
-	pgdb_bind_timestamp(time(NULL), params);
-	pgdb_bind_text(token, params);
-
+	pgdb_bind_c_str(token_type_to_str(type), params);
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
 	return result;
 }
 
-int auth_revoke_registration_tokens(PGconn* conn, const uuid_t* owner) {
-	const char* stmt = "DELETE FROM Registrations WHERE account=$1::uuid;";
-	pgdb_params_t* params = pgdb_params_new(1);
-	pgdb_bind_uuid(owner, params);
-	int result = pgdb_execute_param(conn, stmt, params);
-	pgdb_params_free(&params);
-	return result;
-}
-
-int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* token, uuid_t** owner) {
-	const char* stmt = "DELETE FROM Registrations WHERE token=$1::text RETURNING account;";
+int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token_type_t* type) {
+	const char* stmt = "DELETE FROM Tokens WHERE token=$1::text RETURNING owner, type;";
 	pgdb_params_t* params = pgdb_params_new(1);
 	pgdb_bind_text(token, params);
 
@@ -151,11 +141,11 @@ int auth_verify_and_remove_registration_token(PGconn* conn, const string_t* toke
 	}
 
 	if(PQntuples(result->pg) == 1) {
-		if(pgdb_get_uuid(result, 0, "account", owner)) {
-			ERROR("Has result but no account column found?.\n");
+		if(pgdb_get_uuid(result, 0, "owner", owner) || pgdb_get_enum(result, 0, "type", &token_type_from_str, (int*)type)) {
 			pgdb_params_free(&params);
 			pgdb_result_free(&result);
 			*owner = NULL;
+			*type = -1;
 			return 1;
 		}
 	}

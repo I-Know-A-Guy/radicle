@@ -17,6 +17,7 @@
  */
 
 #include "radicle/tests/auth/auth_fixture.hpp"
+#include "radicle/auth/types.h"
 #include "radicle/pgdb.h"
 
 int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
@@ -105,15 +106,19 @@ int pgdb_fetch_param_fake_owned_session(PGconn* conn, const char* stmt, const pg
 	return 0;
 }
 
-int pgdb_fetch_param_fake_registration_account_uuid(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
+int pgdb_fetch_param_fake_token(PGconn* conn, const char* stmt, const pgdb_params_t* params, pgdb_result_t** result) {
 	*result = pgdb_result_new(PQmakeEmptyPGresult(conn, PGRES_TUPLES_OK));
-	PGresAttDesc descs;
-	const char* name = "account";
-	if(set_fake_columns_attributes((*result)->pg, &descs, 1, &name)) {
+	PGresAttDesc descs[2];
+	const char* names[] = {"owner", "type"};
+	if(set_fake_columns_attributes((*result)->pg, descs, 2, names)) {
 		PQclear((*result)->pg);
 		return 1;
 	}
 	if(set_fake_uuid((*result)->pg, 0, 0)) {
+		PQclear((*result)->pg);
+		return 1;
+	}
+	if(set_fake_c_str((*result)->pg, 0, 1, token_type_to_str(REGISTRATION))) {
 		PQclear((*result)->pg);
 		return 1;
 	}

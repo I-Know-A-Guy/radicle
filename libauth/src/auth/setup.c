@@ -23,34 +23,38 @@
 #include "radicle/auth/setup.h"
 
 int auth_create_db_tables(PGconn* conn) {
-	const char* drop_accounts_role_enum = "DROP TYPE IF EXISTS ROLE CASCADE;";
+	const char* drop_accounts_role_enum = "DROP TYPE IF EXISTS ACCOUNTS_ROLE CASCADE;";
 	const char* drop_accounts_table = "DROP TABLE IF EXISTS Accounts CASCADE;";
-	const char* drop_registrations_table = "DROP TABLE IF EXISTS Registrations CASCADE;";
+	const char* drop_token_type_enum = "DROP TYPE IF EXISTS TOKEN_TYPE CASCADE;";
+	const char* drop_tokens_table = "DROP TABLE IF EXISTS Tokens CASCADE;";
 	const char* drop_sessions_table = "DROP TABLE IF EXISTS Sessions CASCADE;";
 	const char* drop_sessions_accesses_table = "DROP TABLE IF EXISTS SessionAccesses CASCADE;";
 	const char* drop_blacklist_table = "DROP TABLE IF EXISTS Blacklist CASCADE;";
 	const char* drop_blacklist_accesses_table = "DROP TABLE IF EXISTS BlacklistAccesses CASCADE;";
 
-	const char* accounts_role_enum = "CREATE TYPE ROLE AS ENUM ('admin', 'user');";
+	const char* accounts_role_enum = "CREATE TYPE ACCOUNTS_ROLE AS ENUM ('admin', 'user');";
 
 	const char* accounts_table = 
 "CREATE TABLE Accounts(\
 uuid UUID PRIMARY KEY,\
 email TEXT NOT NULL UNIQUE,\
 password TEXT NOT NULL,\
-role ROLE NOT NULL,\
+role ACCOUNTS_ROLE NOT NULL,\
 verified BOOLEAN DEFAULT FALSE,\
 created TIMESTAMP NOT NULL,\
 active BOOLEAN DEFAULT TRUE\
 );";
 
-	const char* registrations_table = 
-"CREATE TABLE Registrations(\
+	const char* tokens_type_enum = "CREATE TYPE TOKEN_TYPE AS ENUM ('registration', 'password_reset');";
+
+	const char* tokens_table = 
+"CREATE TABLE Tokens(\
 id SERIAL PRIMARY KEY,\
-account UUID NOT NULL,\
+owner UUID NOT NULL,\
 token TEXT NOT NULL,\
 created TIMESTAMP NOT NULL,\
-FOREIGN KEY (account) REFERENCES Accounts(uuid)\
+type TOKEN_TYPE NOT NULL,\
+FOREIGN KEY (owner) REFERENCES Accounts(uuid)\
 );";
 
 	const char* sessions_table = 
@@ -129,8 +133,14 @@ FOREIGN KEY(account) REFERENCES Accounts(uuid)\
 		return 1;
 	}
 
-	if(pgdb_execute(conn, drop_registrations_table)) {
-		DEBUG("Failed to drop registrations table.\n");
+	if(pgdb_execute(conn, drop_tokens_table)) {
+		DEBUG("Failed to drop tokens table.\n");
+		pgdb_transaction_rollback(conn);
+		return 1;
+	}
+
+	if(pgdb_execute(conn, drop_token_type_enum)) {
+		DEBUG("Failed to drop tokens type enum.\n");
 		pgdb_transaction_rollback(conn);
 		return 1;
 	}
@@ -159,8 +169,14 @@ FOREIGN KEY(account) REFERENCES Accounts(uuid)\
 		return 1;
 	}
 
-	if(pgdb_execute(conn, registrations_table)) {
-		DEBUG("Failed create registrations table.\n");
+	if(pgdb_execute(conn, tokens_type_enum)) {
+		DEBUG("Failed create tokens type enum.\n");
+		pgdb_transaction_rollback(conn);
+		return 1;
+	}
+
+	if(pgdb_execute(conn, tokens_table)) {
+		DEBUG("Failed create tokens table.\n");
 		pgdb_transaction_rollback(conn);
 		return 1;
 	}

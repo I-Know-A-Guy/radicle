@@ -90,9 +90,22 @@ int set_fake_int(PGresult* result, const int row, const int column, int value);
  * @param row Row of result to fill.
  * @param column Column of value to be inserted.
  *
- * @returns Returns 0 on succes.
+ * @returns Returns 0 on success.
  */
 int set_fake_text(PGresult* result, const int row, const int column);
+
+/**
+ * @brief Sets a fake c str.
+ *
+ * @param result Result to be filled with values.
+ * @param row Row of result to fill.
+ * @param column Column of value to be inserted.
+ * @param txt C Str whihc will be set
+ *
+ * @returns Returns 0 on success.
+ */
+int set_fake_c_str(PGresult* result, const int row, const int column, const char* txt);
+
 /**
  * @brief Sets a fake bool.
  *
