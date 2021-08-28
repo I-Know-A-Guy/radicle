@@ -119,7 +119,7 @@ int auth_save_session_access(PGconn* conn, const uint32_t session_id, const auth
 }
 
 int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t type) {
-	const char* stmt = "DELETE FROM Tokens WHERE owner=$1::uuid and type=$2::text;";
+	const char* stmt = "DELETE FROM Tokens WHERE owner=$1::uuid and type=$2::TOKEN_TYPE;";
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_uuid(owner, params);
 	pgdb_bind_c_str(token_type_to_str(type), params);
