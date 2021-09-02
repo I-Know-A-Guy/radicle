@@ -225,7 +225,7 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* i
 			pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid);
 			pgdb_get_text(result, 0, "email", &(*account)->email);
 			pgdb_get_text(result, 0, "password", &(*account)->password);
-			pgdb_get_text(result, 0, "role", &(*account)->role);
+			pgdb_get_enum(result, 0, "role", &auth_account_role_from_str, (int*)&(*account)->role);
 			pgdb_get_bool(result, 0, "verified", &(*account)->verified);
 			pgdb_get_bool(result, 0, "active", &(*account)->active);
 			pgdb_get_timestamp(result, 0, "created", &(*account)->created);
