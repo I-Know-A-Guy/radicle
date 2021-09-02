@@ -38,7 +38,7 @@
 TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	string_t* email = manage_string("test-user@radicle.com");
 	string_t* password = manage_string("12345678");
-	auth_account_t* account = manage_account(email->ptr, password->ptr, "user", false);
+	auth_account_t* account = manage_account(email->ptr, password->ptr, ROLE_USER, false);
 	ASSERT_EQ(auth_register(conn, account), AUTH_OK);
 	ASSERT_TRUE(account->uuid != NULL);
 

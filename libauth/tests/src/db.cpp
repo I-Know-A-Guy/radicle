@@ -28,7 +28,7 @@ TEST_F(RadicleAuthTests, TestSaveAccount) {
 	auth_account_t* account = manage_account(
 			"test_save_account@email",
 			"password",
-			"user",
+			ROLE_USER,
 			false
 			);
 	ASSERT_EQ(auth_save_account(conn, account, &account->uuid), 0);

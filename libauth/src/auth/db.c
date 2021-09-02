@@ -26,6 +26,7 @@
 
 #include <libpq-fe.h>
 
+#include "radicle/auth/types.h"
 #include "radicle/pgdb.h"
 #include "radicle/auth/db.h"
 
@@ -36,7 +37,7 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 
 	pgdb_bind_text(account->email, params);
 	pgdb_bind_text(account->password, params);
-	pgdb_bind_text(account->role, params);
+	pgdb_bind_c_str(auth_account_role_to_str(account->role), params);
 	pgdb_bind_bool(account->verified, params);
 	pgdb_bind_timestamp(time(NULL), params);
 
@@ -185,7 +186,7 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
 		*account  = calloc(1, sizeof(auth_account_t));
 		pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid);
 		pgdb_get_text(result, 0, "password", &(*account)->password);
-		pgdb_get_text(result, 0, "role", &(*account)->role);
+		pgdb_get_enum(result, 0, "role", &auth_account_role_from_str, (int*)&(*account)->role);
 		pgdb_get_bool(result, 0, "verified", &(*account)->verified);
 		pgdb_get_bool(result, 0, "active", &(*account)->active);
 		pgdb_get_timestamp(result, 0, "created", &(*account)->created);

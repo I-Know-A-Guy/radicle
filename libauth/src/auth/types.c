@@ -22,14 +22,34 @@
 #include "radicle/auth/types.h"
 #include "radicle/print.h"
 
-auth_account_t* auth_account_new(uuid_t* uuid, string_t* email, string_t* password, string_t* role, bool active, bool verified, time_t created) {
+int auth_account_role_from_str(const char* role) {
+	if(strcmp("user", role) == 0) {
+		return ROLE_USER;
+	} else if(strcmp("admin", role) == 0) {
+		return ROLE_ADMIN;
+	}
+	return ROLE_NONE;
+}
+
+const char* auth_account_role_to_str(auth_account_role_t role) {
+	switch(role) {
+		case ROLE_USER:
+			return "user";
+		case ROLE_ADMIN:
+			return "admin";
+		default:
+			return "none";
+	}
+}
+
+auth_account_t* auth_account_new(uuid_t* uuid, string_t* email, string_t* password, auth_account_role_t role, bool active, bool verified, time_t created) {
 
 	auth_account_t* acc = calloc(1, sizeof(auth_account_t));
 
 	acc->uuid = uuid_copy(uuid); 
 	acc->email = string_copy(email);
 	acc->password = string_copy(password);
-	acc->role = string_copy(role);
+	acc->role = role;
 	acc->active = active;
 	acc->verified = verified;
 	acc->created = created;
@@ -43,7 +63,6 @@ void auth_account_free(auth_account_t** account) {
 	free((*account)->uuid);
 	string_free(&(*account)->email);
 	string_free(&(*account)->password);
-	string_free(&(*account)->role);
 	free(*account);
 	*account = NULL;
 }
@@ -98,5 +117,7 @@ const char* token_type_to_str(token_type_t type) {
 			return "registration";
 		case PASSWORD_RESET:
 			return "password_reset";
+		default:
+			return "none";
 	}
 }

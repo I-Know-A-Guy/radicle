@@ -39,6 +39,15 @@
 extern "C" {
 #endif
 
+typedef enum auth_account_role {
+	ROLE_NONE = 0,
+	ROLE_ADMIN,
+	ROLE_USER
+} auth_account_role_t;
+
+int auth_account_role_from_str(const char* role);
+const char* auth_account_role_to_str(auth_account_role_t role);
+
 /**
  * @brief Struct which represents a row in the Account table.
  * @todo enum for role
@@ -50,7 +59,7 @@ typedef struct auth_account {
 	uuid_t* uuid; /**< Identifier of account. */
 	string_t* email;
 	string_t* password;
-	string_t* role;
+	auth_account_role_t role;
 	bool verified, active;
 	time_t created;
 } auth_account_t;
@@ -68,7 +77,7 @@ typedef struct auth_account {
  *
  * @returns Returns a new pointer to \ref auth_account_t
  */
-auth_account_t* auth_account_new(uuid_t* uuid, string_t* email, string_t* password, string_t* role, bool active, bool verified, time_t created);
+auth_account_t* auth_account_new(uuid_t* uuid, string_t* email, string_t* password, auth_account_role_t role, bool active, bool verified, time_t created);
 
 /**
  * @brief Frees all associated data of account_t and sets pointer to NULL.

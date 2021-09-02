@@ -132,14 +132,13 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 		 *
 		 * @return Returns pointer to account object.
 		 */
-		auth_account_t* manage_account(const char* email, const char* password, const char* role, const bool verified) {
+		auth_account_t* manage_account(const char* email, const char* password, auth_account_role_t role, const bool verified) {
 			string_t* email_buf = manage_string(email);
 			string_t* password_buf = manage_string(password);
-			string_t* role_buf = manage_string(role);
 			auth_account_t* buf = auth_account_new(NULL,
 					email_buf,
 					password_buf,
-					role_buf,
+					role,
 				       	true,
 				       	verified,
 				       	0);
