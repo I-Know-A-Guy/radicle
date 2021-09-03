@@ -110,6 +110,9 @@ int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t t
  * @param token Verification token.
  * @param owner Owner which will be set.
  *
+ * @todo dont return token type but instead add it to where clause in sql
+ * statement
+ *
  * @return Returns 0 on success. Owner only contains a value if token was valid.
  */
 int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token_type_t* type);
