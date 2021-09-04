@@ -54,5 +54,5 @@ add_subdirectory(libcommon)
 add_subdirectory(libconfig)
 add_subdirectory(libpgdb)
 add_subdirectory(libauth)
-
+add_subdirectory(libapi)
 
