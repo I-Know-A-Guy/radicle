@@ -85,7 +85,7 @@ int api_auth_callback_resend_verification_mail(const struct _u_request * request
 	api_endpoint_t* endpoint = response->shared_data;
 
 	if(endpoint->account->verified)
-		return RESPOND(400, EMAIL_ALREADY_VERIFIED, VALIDATION_EMAIL_ALREADY_VERIFIED);
+		return RESPOND(400, "Your mail has already been verified!", VALIDATION_EMAIL_ALREADY_VERIFIED);
 
 	if(pgdb_transaction_begin(endpoint->conn->connection))	
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_BEGIN);

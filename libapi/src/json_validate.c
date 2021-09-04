@@ -47,7 +47,7 @@ int validate_regex(const char* exp, const int capture_groups, const char* input)
  * 
  * @result Returns 0 on success
  */
-int ikag_json_validate_string(const json_t* object, const char* key, const char* regex, const int capture_groups, string_t** result) {
+int api_json_validate_string(const json_t* object, const char* key, const char* regex, const int capture_groups, string_t** result) {
 	json_t* child = json_object_get(object, key);
 	if(child == NULL || child->type != JSON_STRING) {
 		*result = NULL;
@@ -68,13 +68,13 @@ int ikag_json_validate_string(const json_t* object, const char* key, const char*
 int api_json_validate_text(const json_t* object, const char* key, const int minLength, const int maxLength, string_t** result) {
 	char buffer[50];
 	sprintf(buffer, "^.{%d,%d}$", minLength, maxLength);
-	return ikag_json_validate_string(object, key, buffer, 0, result);
+	return api_json_validate_string(object, key, buffer, 0, result);
 }
 
 int api_json_validate_email(const json_t* object, const char* key, string_t** result) {
-	return ikag_json_validate_string(object, key, "^[^\\s@]+@([^\\s@.,]+\\.)+[^\\s@.,]{2,}$", 2, result);
+	return api_json_validate_string(object, key, "^[^\\s@]+@([^\\s@.,]+\\.)+[^\\s@.,]{2,}$", 2, result);
 }
 
 int api_json_validate_password(const json_t* object, const char* key, string_t** result) {
-	return ikag_json_validate_string(object, key, "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$", 4, result);
+	return api_json_validate_string(object, key, "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$", 4, result);
 }

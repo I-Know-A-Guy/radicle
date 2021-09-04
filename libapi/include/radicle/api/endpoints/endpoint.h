@@ -1,8 +1,27 @@
+/* LIBRADICLE - The Radicle Library
+ * Copyright (C) 2021 Nils Egger <nilsxegger@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.  If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+
 /**
  * @file
- * @brief Contains \ref ikag_endpoint_t which is passed between the different callbacks.
- * @author Nils Egger
- * @addtogroup endpoints
+ * @brief Contains \ref api_endpoint_t which is passed between the different callbacks.
+ * @addtogroup libapi 
+ * @{
+ * @addtogroup libapi_endpoints
  * @{
  */
 
@@ -119,7 +138,7 @@ void api_endpoint_free(api_endpoint_t* endpoint);
  * @param instance Ulfius Library instance
  * @param method HTTP method to bind to endpoint
  * @param url URL of endpoint
- * @param ikag_instance IKAG Instance containing global properties.
+ * @param api_instance IKAG Instance containing global properties.
  * @param authenticated If true, endpoint is only allowed to be used
  * authenticated.
  * @param jsonBody if true, endpoint will load json body and return an error if
@@ -127,7 +146,7 @@ void api_endpoint_free(api_endpoint_t* endpoint);
  */
 void api_add_endpoint(struct _u_instance* instance, const char* method, const char* url, int (* callback_function)(const struct _u_request * request, // Input parameters (set by the framework)
                                                          struct _u_response * response,     // Output parameters (set by the user)
-                                                         void * user_data), api_instance_t* ikag_instance, bool authenticated, bool verified, bool jsonBody);
+                                                         void * user_data), api_instance_t* api_instance, bool authenticated, bool verified, bool jsonBody);
 
 /**
  * @brief If rollback fails, resets connection so that open transaction wont be
@@ -141,4 +160,5 @@ void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_resp
 
 #endif //IKAG_INCLUDE_IKAG_ENDPOINTS_ENDPOINT_H
 
+/** @} */
 /** @} */

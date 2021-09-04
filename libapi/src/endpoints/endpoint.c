@@ -104,7 +104,7 @@ int api_callback_endpoint_check_for_verified_email(const struct _u_request* requ
 	return U_CALLBACK_CONTINUE;
 }
 
-int ikag_socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
+int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
 	*buffer = calloc(1, sizeof(string_t));
 	(*buffer)->length = INET_ADDRSTRLEN;
 	(*buffer)->ptr = calloc(INET_ADDRSTRLEN, sizeof(char));
@@ -119,7 +119,7 @@ int ikag_socket_info(const struct sockaddr* address, string_t** buffer, unsigned
 }
 
 int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status) {
-	if(ikag_socket_info(request->client_address, &endpoint->request_log->ip, &endpoint->request_log->port)) {
+	if(socket_info(request->client_address, &endpoint->request_log->ip, &endpoint->request_log->port)) {
 		ERROR("Failed to convert ip to text.\n");
 		endpoint->request_log->ip = string_from_literal("?.?.?.?");
 	}
@@ -144,7 +144,7 @@ int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint,
  * @brief If session id is already set, no new session will be created, otherwise, depending if endpoint->account is set, either
  * a owner or unowned session is created.
  */
-int ikag_endpoint_manage_session(struct _u_response * response, api_instance_t* instance, api_endpoint_t* endpoint) {
+int api_endpoint_manage_session(struct _u_response * response, api_instance_t* instance, api_endpoint_t* endpoint) {
 
 	if(endpoint->conn != NULL && endpoint->session == 0 || endpoint->refresh_cookie) {
 		auth_cookie_t* cookie = NULL;
@@ -167,7 +167,7 @@ int ikag_endpoint_manage_session(struct _u_response * response, api_instance_t* 
 	return 0;
 }
 
-void ikag_request_log(const struct _u_request* request, auth_request_log_t* log, uuid_t* uuid, unsigned int status) {
+void api_request_log(const struct _u_request* request, auth_request_log_t* log, uuid_t* uuid, unsigned int status) {
 	const char* uuid_c = NULL;
 	string_t* uuid_string = NULL;
 	if(uuid != NULL) {
@@ -189,7 +189,7 @@ int api_endpoint_respond(const struct _u_request* request, struct _u_response * 
 	if(endpoint != NULL) {
 		// Only fails if it wasnt possible to create new cookie for
 		// login
-		if(ikag_endpoint_manage_session(response, instance, endpoint)) {
+		if(api_endpoint_manage_session(response, instance, endpoint)) {
 			http_status = 500;
 			json_decref(body);
 			body = api_response_object("Failed to create new session.");
@@ -198,9 +198,9 @@ int api_endpoint_respond(const struct _u_request* request, struct _u_response * 
 		api_endpoint_log(request, endpoint, http_status, internal_status);
 
 		if(endpoint->account != NULL) 
-			ikag_request_log(request, endpoint->request_log, endpoint->account->uuid, http_status);
+			api_request_log(request, endpoint->request_log, endpoint->account->uuid, http_status);
 		else 
-			ikag_request_log(request, endpoint->request_log, NULL, http_status);
+			api_request_log(request, endpoint->request_log, NULL, http_status);
 
 		api_endpoint_free(endpoint);
 	}
@@ -244,21 +244,21 @@ void api_endpoint_free(api_endpoint_t* endpoint) {
 
 void api_add_endpoint(struct _u_instance* instance, const char* method, const char* url, int (* callback_function)(const struct _u_request * request, // Input parameters (set by the framework)
                                                          struct _u_response * response,     // Output parameters (set by the user)
-                                                         void * user_data), api_instance_t* ikag_instance, bool authenticated, bool verified, bool jsonBody) {
-	ulfius_add_endpoint_by_val(instance, "OPTIONS", url, NULL, 0, &api_default_options_callback, ikag_instance);
+                                                         void * user_data), api_instance_t* api_instance, bool authenticated, bool verified, bool jsonBody) {
+	ulfius_add_endpoint_by_val(instance, "OPTIONS", url, NULL, 0, &api_default_options_callback, api_instance);
 
 	int counter = 0;
 
-	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_init, ikag_instance);
-	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_session, ikag_instance);
+	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_init, api_instance);
+	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_session, api_instance);
 	if(authenticated && !verified)
-		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_authentication, ikag_instance);
+		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_authentication, api_instance);
 	else if(verified) 
-		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_verified_email, ikag_instance);
+		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_verified_email, api_instance);
 
 	if(jsonBody)
-		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_load_json_body, ikag_instance);
-	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, callback_function, ikag_instance);
+		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_load_json_body, api_instance);
+	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, callback_function, api_instance);
 }
 
 void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_response * response) {

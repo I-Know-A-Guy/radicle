@@ -1,13 +1,32 @@
+/* LIBRADICLE - The Radicle Library
+ * Copyright (C) 2021 Nils Egger <nilsxegger@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.  If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+
 /**
  * @file
  * @brief All endpoints associated with authentication.
- * @author Nils Egger
- * @addtogroup endpoints 
+ * @addtogroup libapi 
+ * @{
+ * @addtogroup libapi_endpoints Endpoints 
  * @{
  */
 
-#ifndef IKAG_INCLUDE_IKAG_ENDPOINTS_AUTH_H
-#define IKAG_INCLUDE_IKAG_ENDPOINTS_AUTH_H
+#ifndef RADICLE_LIBAPI_INCLUDE_RADICLE_API_ENDPOINTS_AUTH_H
+#define RADICLE_LIBAPI_INCLUDE_RADICLE_API_ENDPOINTS_AUTH_H
 
 #include <ulfius.h>
 
@@ -17,26 +36,48 @@
 extern "C" {
 #endif
 
-#define EMAIL_ALREADY_VERIFIED "Your email has already been verified."
-
+/**
+ * @brief Registers user to database.
+ */
 int api_auth_callback_register(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Resend mail with email verification code.
+ */
 int api_auth_callback_resend_verification_mail(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Verifies email code
+ */
 int api_auth_callback_register_verify(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Signs in user using credentials and responds with a cookie
+ *
+ * @todo Check if cookie needs to be forever or only session 
+ */
 int api_auth_callback_sign_in(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Sends password reset code.
+ */
 int api_auth_callback_send_password_reset(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Resets password with code.
+ */
 int api_auth_callback_reset_password(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Returns object containing email and verified status.
+ */
 int api_auth_callback_cookie_info(const struct _u_request * request, struct _u_response * response, void * user_data);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif // IKAG_INCLUDE_IKAG_ENDPOINTS_AUTH_H
+#endif // RADICLE_LIBAPI_INCLUDE_RADICLE_API_ENDPOINTS_AUTH_H
 
+/** @} */
 /** @} */

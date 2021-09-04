@@ -1,14 +1,36 @@
+/* LIBRADICLE - The Radicle Library
+ * Copyright (C) 2021 Nils Egger <nilsxegger@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.  If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+
 /**
  * @file
  * @brief Contains Enum of all Internal Codes
- * @author Nils Egger
  *
- * @addtogroup endpoints
+ * @addtogroup libapi 
+ * @addtogroup libapi_endpoints
  * @{
  */
 
 #ifndef INCLUDE_IKAG_ENDPOINTS_INTERNAL_CODES_H
 #define INCLUDE_IKAG_ENDPOINTS_INTERNAL_CODES_H
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 typedef enum internal_errors {
 	SUCCESS = 0,
@@ -63,6 +85,10 @@ const char* internal_errors_msg(internal_errors_t code);
  * with cleanup would improve returns!
  */
 const char* public_internal_errors_msg(internal_errors_t code);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif // INCLUDE_IKAG_ENDPOINTS_INTERNAL_CODES_H
 
