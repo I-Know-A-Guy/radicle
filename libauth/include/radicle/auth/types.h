@@ -50,7 +50,6 @@ const char* auth_account_role_to_str(auth_account_role_t role);
 
 /**
  * @brief Struct which represents a row in the Account table.
- * @todo enum for role
  *
  * @see auth_account_new()
  * @see auth_account_free()

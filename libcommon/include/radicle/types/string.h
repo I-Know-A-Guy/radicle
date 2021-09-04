@@ -46,6 +46,8 @@ extern "C" {
  * @see string_from_literal()
  * @see string_copy()
  * @see string_free()
+ *
+ * @todo add function for checking if string is same
  */
 typedef struct string {
 	char* ptr; /**< Pointer to char array. */
