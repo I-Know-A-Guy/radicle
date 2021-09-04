@@ -103,7 +103,7 @@ void auth_cookie_free(auth_cookie_t** cookie) {
 }
 
 int token_type_from_str(const char* type) {
-	if(strcmp(type, "regsitration")) {
+	if(strcmp(type, "registration")) {
 		return REGISTRATION;
 	} else if(strcmp(type, "password_reset")) {
 		return PASSWORD_RESET;
