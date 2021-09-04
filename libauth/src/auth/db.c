@@ -56,6 +56,18 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 	return 0;
 }
 
+int auth_update_account_password(PGconn* conn, const uuid_t* uuid, const string_t* password) {
+	const char* stmt = "UPDATE Accounts SET password=$1::text WHERE uuid=$2::uuid;";
+
+	pgdb_params_t* params = pgdb_params_new(2);
+	pgdb_bind_text(password, params);
+	pgdb_bind_uuid(uuid, params);
+
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
+}
+
 int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type) {
 	const char* stmt = "INSERT INTO Tokens(owner, created, token, type) VALUES($1::uuid, now(), $2::text, $3::TOKEN_TYPE);";
 	pgdb_params_t* params = pgdb_params_new(3);

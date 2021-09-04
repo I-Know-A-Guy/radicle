@@ -34,6 +34,11 @@ TEST_F(RadicleAuthTests, TestSaveAccount) {
 	ASSERT_EQ(auth_save_account(conn, account, &account->uuid), 0);
 }
 
+TEST_F(RadicleAuthTests, TestUpdateAccountPassword) {
+	install_execute_param_always_success();
+	ASSERT_EQ(auth_update_account_password(conn, common_uuid, common_string), 0);
+}
+
 TEST_F(RadicleAuthTests, TestSaveSession) {
 	install_fetch_id_hook();
 	uint32_t id = 0;

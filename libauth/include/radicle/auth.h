@@ -100,6 +100,16 @@ auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const aut
  */
 auth_errors_t auth_register(PGconn* conn, auth_account_t* account);
 
+/**
+ * @brief Creates password hash and saves it to database.
+ *
+ * @param conn Connection to database.
+ * @param uuid UUID of account to be upated.
+ * @param password Raw password to be hashed and stored.
+ *
+ * @return Returns AUTH_OK, AUTH_ERROR
+ */
+auth_errors_t auth_update_password(PGconn* conn, const uuid_t* uuid, const string_t* password);
 
 /**
  * @brief Creates and saves token.

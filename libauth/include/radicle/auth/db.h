@@ -56,6 +56,17 @@ extern "C" {
 int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid);
 
 /**
+ * @brief Updates password of account. Must already be hashed.
+ *
+ * @param conn Connection to database.
+ * @param uuid UUID of account which will be updated.
+ * @param password Hashed password which will be inserted into database.
+ *
+ * @return Returns 0 on success
+ */
+int auth_update_account_password(PGconn* conn, const uuid_t* uuid, const string_t* password);
+
+/**
  * @brief Inserts token into database
  *
  * @param conn Connection to database.

@@ -91,4 +91,7 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	EXPECT_EQ(memcmp(account->uuid->bin, cookie_account->uuid->bin, 16), 0);
 
 	ASSERT_EQ(auth_log_access(conn, cookie_session_id, test_request_log), AUTH_OK);
+
+	ASSERT_EQ(auth_update_password(conn, signed_in_account->uuid, manage_string("new password!")), 0);
+
 }

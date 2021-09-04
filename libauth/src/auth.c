@@ -54,7 +54,6 @@ auth_errors_t auth_log_access(PGconn* conn, const uint32_t session_id, const aut
 auth_errors_t auth_register(PGconn* conn, auth_account_t* account) {
 
 	string_t* password_hash = NULL;
-	uint32_t session_id = 0;
 
 	if(auth_hash_password(account->password, &password_hash)) {
 		DEBUG("Failed to hash password.\n");
@@ -68,6 +67,23 @@ auth_errors_t auth_register(PGconn* conn, auth_account_t* account) {
 		DEBUG("Failed to save account.\n");
 		return AUTH_ERROR;
 	}
+
+	return AUTH_OK;
+}
+
+auth_errors_t auth_update_password(PGconn* conn, const uuid_t* uuid, const string_t* password) {
+	string_t* password_hash = NULL;
+	if(auth_hash_password(password, &password_hash)) {
+		DEBUG("Failed to hash password.\n");
+		return AUTH_ERROR;
+	}
+	
+	if(auth_update_account_password(conn, uuid, password)) {
+		DEBUG("Failed to update password of account.");
+		return AUTH_ERROR;
+	}
+
+	string_free(&password_hash);
 
 	return AUTH_OK;
 }
