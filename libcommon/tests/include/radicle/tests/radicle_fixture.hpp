@@ -101,9 +101,10 @@ class RadicleTests: public ::testing::Test {
 	/**
 	 * @brief Takes ownership of a hook and installs it.
 	 */
-	void install_hook(subhook_t hook) {
+	subhook_t install_hook(subhook_t hook) {
 		hooks.push_back(hook);
 		subhook_install(hook);
+		return hook;
 	}
 
 	/**

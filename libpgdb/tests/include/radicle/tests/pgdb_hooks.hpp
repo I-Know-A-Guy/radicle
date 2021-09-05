@@ -36,6 +36,31 @@
 #include "radicle/tests/radicle_fixture.hpp"
 
 /**
+ * @brief Fake which always returns PGRES_COMMAND_OK as status
+ */
+ExecStatusType pgdb_pq_result_status_fake_ok(PGconn* conn); 
+
+/**
+ * @brief Fake which always returns PGRES_FATAL_ERROR as status
+ */
+ExecStatusType pgdb_pq_result_status_fake_fatal(PGconn* conn); 
+
+/**
+ * @brief Fake which always returns PGRES_TUPLES_OK as status
+ */
+ExecStatusType pgdb_pq_result_status_fake_tuple(PGconn* conn); 
+
+/**
+ * @brief Simply returns NULL
+ */
+PGresult* pgdb_pq_exec_fake(PGconn* conn, const char* stmt);
+
+/**
+ * @brief Simply returns NULL
+ */
+PGresult* pgdb_pq_exec_param_fake(PGconn* conn, const char* stmt, int nParams, const Oid *paramTypes, const char *const *paramValues, const int *paramLengths, const int *paramFormats, int resultFormat);
+
+/**
  * @brief Creates column attributes from name and length array.
  *
  * @param result Result which will contain columns.
@@ -123,6 +148,13 @@ int set_fake_bool(PGresult* result, const int row, const int column, bool value)
  *
  * @returns Returns 0.
  */
+int pgdb_execute_fake(PGconn* conn, const char* stmt);
+
+/**
+ * @brief Fake function for pgdb_execute_param which simply returns success without doing anyhting.
+ *
+ * @returns Returns 0.
+ */
 int pgdb_execute_param_fake(PGconn* conn, const char* stmt, const pgdb_params_t* params);
 
 /**
@@ -152,6 +184,25 @@ int pgdb_connect_fake(const char* conninfo, PGconn** connection);
 class RadiclePGDBHooks: public RadicleTests {
 
 	protected:
+		subhook_t install_status_command_ok() {
+			return install_hook(subhook_new((void*)PQresultStatus, (void*)pgdb_pq_result_status_fake_ok, SUBHOOK_64BIT_OFFSET));
+		}
+
+		subhook_t install_status_fatal_error() {
+			return install_hook(subhook_new((void*)PQresultStatus, (void*)pgdb_pq_result_status_fake_fatal, SUBHOOK_64BIT_OFFSET));
+		}
+
+		subhook_t install_status_tuples_ok() {
+			return install_hook(subhook_new((void*)PQresultStatus, (void*)pgdb_pq_result_status_fake_tuple, SUBHOOK_64BIT_OFFSET));
+		}
+
+		subhook_t install_pg_exec_hook() {
+			return install_hook(subhook_new((void*)PQexec, (void*)pgdb_pq_exec_fake, SUBHOOK_64BIT_OFFSET));
+		}
+
+		subhook_t install_pg_exec_param_hook() {
+			return install_hook(subhook_new((void*)PQexecParams, (void*)pgdb_pq_exec_param_fake, SUBHOOK_64BIT_OFFSET));
+		}
 		
 		/**
 		 * @brief Replaces \ref pgdb_fetch_param with \ref pgdb_fetch_param_fake_uuid
@@ -167,6 +218,15 @@ class RadiclePGDBHooks: public RadicleTests {
 		 */
 		subhook_t install_fetch_id_hook() {
 			subhook_t buf = subhook_new((void*)pgdb_fetch_param, (void*)pgdb_fetch_param_fake_id, SUBHOOK_64BIT_OFFSET);
+			install_hook(buf);
+			return buf;
+		}
+
+		/**
+		 * @brief Replaces \ref pgdb_execute with \ref pgdb_execute_fake 
+		 */
+		subhook_t install_execute_always_success() {
+			subhook_t buf = subhook_new((void*)pgdb_execute, (void*)pgdb_execute_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
 			return buf;
 		}

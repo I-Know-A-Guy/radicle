@@ -23,7 +23,7 @@
 #include "radicle/tests/pgdb_hooks.hpp"
 #include "radicle/pgdb.h"
 
-class PGDBTest: public ::testing::Test {
+class PGDBTest: public RadicleTests {
 	public:
 
 		const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
@@ -38,10 +38,12 @@ class PGDBTest: public ::testing::Test {
 		 */
 		void SetUp() override {
 			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
+			RadicleTests::SetUp();
 		}
 
 		void TearDown() override {
 			PQfinish(conn);
+			RadicleTests::TearDown();
 		}
 
 };
@@ -56,6 +58,54 @@ TEST_F(PGDBTest, TestPingInfo) {
 	ASSERT_EQ(status, PQPING_OK) << info;
 }
 
+TEST_F(RadiclePGDBHooks, TestExecute) {
+	subhook_t status_hook = install_status_command_ok();
+	install_pg_exec_hook();
+	const char* command = "INSERT INTO Accounts(id) VALUES (1);";
+	ASSERT_EQ(pgdb_execute(NULL, command), 0);
+
+	remove_hook(status_hook);
+	status_hook = install_status_fatal_error();
+
+	ASSERT_EQ(pgdb_execute(NULL, command), 1);
+}
+
+TEST_F(RadiclePGDBHooks, TestExecuteParam) {
+	subhook_t status_hook = install_status_command_ok();
+	install_pg_exec_param_hook();
+	const char* stmt= "INSERT INTO Accounts(id) VALUES ($1::int);";
+	pgdb_params_t* params = pgdb_params_new(1);
+	pgdb_bind_uint32(1, params);	
+
+	EXPECT_EQ(pgdb_execute_param(NULL, stmt, params), 0);
+
+	remove_hook(status_hook);
+	status_hook = install_status_fatal_error();
+
+	EXPECT_EQ(pgdb_execute_param(NULL, stmt, params), 1);
+	
+	pgdb_params_free(&params);
+}
+
+TEST_F(RadiclePGDBHooks, TestFetchParam) {
+	subhook_t status_hook = install_status_tuples_ok();
+	install_pg_exec_param_hook();
+	const char* stmt= "SELECT * FROM Accounts WHERE id=$1::int;";
+	pgdb_params_t* params = pgdb_params_new(1);
+	pgdb_bind_uint32(1, params);	
+
+	pgdb_result_t* result;
+	EXPECT_EQ(pgdb_fetch_param(NULL, stmt, params, &result), 0);
+
+	remove_hook(status_hook);
+	status_hook = install_status_fatal_error();
+
+	EXPECT_EQ(pgdb_fetch_param(NULL, stmt, params, &result), 1);
+
+	pgdb_result_free(&result);
+	pgdb_params_free(&params);
+}
+
 TEST(PGDBParamsTest, TestParamsNew) {
 	pgdb_params_t* params = pgdb_params_new(3);
 	EXPECT_EQ(params->count, 3);
@@ -64,13 +114,44 @@ TEST(PGDBParamsTest, TestParamsNew) {
 	EXPECT_TRUE(params->lengths != NULL);
 	EXPECT_TRUE(params->formats != NULL);
 	pgdb_params_free(&params);
+	ASSERT_TRUE(params == NULL);
 }
 
-TEST(PGDBParamsTest, TestBindInt) {
-	pgdb_params_t* params = pgdb_params_new(1);
-	pgdb_bind_uint32(5, params);
-	EXPECT_EQ(params->lengths[0], sizeof(uint32_t));
+TEST_F(PGDBTest, TestBinds) {
+	pgdb_params_t* params = pgdb_params_new(8);
+	
+	pgdb_bind_null(params);
+	EXPECT_EQ(params->lengths[0], 0);
+
+	pgdb_bind_uint32(1, params);
+	EXPECT_EQ(params->lengths[1], sizeof(uint32_t));
+
+	pgdb_bind_uint64(1, params);
+	EXPECT_EQ(params->lengths[2], sizeof(uint64_t));
+
+	pgdb_bind_text(common_string, params);
+	EXPECT_EQ(params->lengths[3], strlen(common_string->ptr));
+
+	pgdb_bind_c_str(common_string->ptr, params);
+	EXPECT_EQ(params->lengths[4], strlen(common_string->ptr));
+
+	pgdb_bind_uuid(common_uuid, params);
+	EXPECT_EQ(params->lengths[5], 16);
+
+	pgdb_bind_bool(false, params);
+	EXPECT_EQ(params->lengths[6], sizeof(bool));
+
+	pgdb_bind_timestamp(1, params);
+	EXPECT_EQ(params->lengths[7], sizeof(time_t));
+
 	pgdb_params_free(&params);
+}
+
+TEST(PGDBResultTest, TestNewResult) {
+	pgdb_result_t* result = pgdb_result_new(NULL);
+	ASSERT_TRUE(result != NULL);
+	pgdb_result_free(&result);
+	ASSERT_TRUE(result == NULL);
 }
 
 TEST_F(RadiclePGDBHooks, TestCreateLimit) {
@@ -93,3 +174,4 @@ TEST_F(RadiclePGDBHooks, TestCreateLimit) {
 
 	pgdb_connection_queue_free(&queue);
 }
+

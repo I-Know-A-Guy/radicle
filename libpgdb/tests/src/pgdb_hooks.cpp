@@ -18,6 +18,26 @@
 
 #include "radicle/tests/pgdb_hooks.hpp"
 
+ExecStatusType pgdb_pq_result_status_fake_ok(PGconn* conn) {
+	return PGRES_COMMAND_OK;
+}
+
+ExecStatusType pgdb_pq_result_status_fake_fatal(PGconn* conn) {
+	return PGRES_FATAL_ERROR;
+}
+
+ExecStatusType pgdb_pq_result_status_fake_tuple(PGconn* conn) {
+	return PGRES_TUPLES_OK;
+}
+
+PGresult* pgdb_pq_exec_fake(PGconn* conn, const char* stmt) {
+	return NULL;
+}
+
+PGresult* pgdb_pq_exec_param_fake(PGconn* conn, const char* stmt, int nParams, const Oid *paramTypes, const char *const *paramValues, const int *paramLengths, const int *paramFormats, int resultFormat) {
+	return NULL;
+}
+
 int set_fake_columns_attributes(PGresult* result, PGresAttDesc* descs, const int columns, const char** names) {
 	for(int i = 0; i < columns; i++) {
 		descs[i] = {(char*)names[i], 0, 0, 1, 0, 0, 0};
@@ -61,6 +81,10 @@ int set_fake_c_str(PGresult* result, const int row, const int column, const char
 
 int set_fake_bool(PGresult* result, const int row, const int column, bool value) {
 	return set_fake_value(result, row, column, (char*)&value, 1);
+}
+
+int pgdb_execute_fake(PGconn* conn, const char* stmt) {
+	return 0;
 }
 
 int pgdb_execute_param_fake(PGconn* conn, const char* stmt, const pgdb_params_t* params) {
