@@ -95,13 +95,14 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 	std::vector<auth_cookie_t*> cookies; /**< Cookie pointers which will be freed on TearDown() */
 
 	protected:
-		PGconn* conn = NULL; /**< Fake connection to database. */
+		auth_account_t* common_account = NULL;
 		auth_request_log_t* test_request_log; /**< Common requester which can be used for unit tests. */
 
 		/**
 		 * @brief Initializes test_requester and calls RadicleTests::SetUp()
 		 */
 		void SetUp() override {
+			common_account = manage_account("email", "password", ROLE_USER, false);
 			test_request_log = auth_request_log_new();
 			test_request_log->ip = string_from_literal("127.0.0.1");
 			test_request_log->url = string_from_literal("/i/am/a/test");
@@ -229,7 +230,7 @@ class RadicleConnectedAuthTests: public RadicleAuthTests {
 		void SetUp() override {
 			RadicleAuthTests::SetUp();
 			const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
-			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
+			//ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
 		}
 
 		/**
@@ -237,7 +238,7 @@ class RadicleConnectedAuthTests: public RadicleAuthTests {
 		 */
 		void TearDown() override {
 			RadicleAuthTests::TearDown();
-			PQfinish(conn);
+			//PQfinish(conn);
 		}
 
 };

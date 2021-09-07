@@ -35,6 +35,44 @@
 #include "radicle/pgdb.h"
 #include "radicle/tests/radicle_fixture.hpp"
 
+#define PGDB_CREATE_FETCH_HOOK(name) subhook_new((void*)PQexecParams, (void*)name, SUBHOOK_64BIT_OFFSET)
+
+#define PGDB_FETCH_FAKE(name)\
+	PGresult* name(PGconn *conn, const char *command, int nParams, const Oid *paramTypes, const char *const *paramValues, const int *paramLengths, const int *paramFormats, int resultFormat)
+
+#define PGDB_FAKE_RESULTS(status, n)\
+	PGresult* result = PQmakeEmptyPGresult(NULL, status);\
+	int column = -1;\
+	PGresAttDesc descs[n];\
+	if(set_fake_columns_attributes(result, descs, n, columns)) {\
+		PQclear(result);\
+		ERROR("Failed to set columns.\n");\
+		return NULL;\
+	}\
+
+#define PGDB_FAKE_EMPTY_RESULT(status) return PQmakeEmptyPGresult(NULL, status);
+	
+
+#define PGDB_FAKE_RESULT_1(status, a)\
+	const char* columns[] = {a};\
+	PGDB_FAKE_RESULTS(status, 1);
+
+#define PGDB_FAKE_RESULT_2(a, b)\
+	const char* columns[] = {a, b};\
+	PGDB_FAKE_RESULTS(status, 2);
+	
+       	
+
+#define PGDB_FAKE_FINISH() return result;
+
+#define PGDB_FAKE_VALUE(func, val)\
+	if(func(result, 0, ++column, val)) {\
+		ERROR("Failed to set fake value.\n");\
+	}
+
+#define PGDB_FAKE_UUID(val) PGDB_FAKE_VALUE(set_fake_uuid, val)
+#define PGDB_FAKE_INT(val) PGDB_FAKE_VALUE(set_fake_int, val)
+
 /**
  * @brief Fake which always returns PGRES_COMMAND_OK as status
  */
@@ -91,10 +129,11 @@ int set_fake_value(PGresult* result, const int row, const int column, char* valu
  * @param result Result to be filled with values.
  * @param row Row of result to fill.
  * @param column Column of value to be inserted.
+ * @param bytes Array of size 16
  *
  * @returns Returns 0 on succes.
  */
-int set_fake_uuid(PGresult* result, const int row, const int column);
+int set_fake_uuid(PGresult* result, const int row, const int column, char* bytes);
 
 /**
  * @brief Sets a fake int.

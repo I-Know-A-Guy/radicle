@@ -28,7 +28,8 @@ int pgdb_fetch_param_fake_account(PGconn* conn, const char* stmt, const pgdb_par
 		PQclear((*result)->pg);
 		return 1;
 	}
-	if(set_fake_uuid((*result)->pg, 0, 0)) {
+	char uuid[16] = {0x00};
+	if(set_fake_uuid((*result)->pg, 0, 0, uuid)) {
 		PQclear((*result)->pg);
 		return 1;
 	}
@@ -75,7 +76,8 @@ int pgdb_fetch_param_fake_owned_session(PGconn* conn, const char* stmt, const pg
 		PQclear((*result)->pg);
 		return 1;
 	}
-	if(set_fake_uuid((*result)->pg, 0, 2)) {
+	char uuid[16] = {0x00};
+	if(set_fake_uuid((*result)->pg, 0, 2, uuid)) {
 		PQclear((*result)->pg);
 		return 1;
 	}
@@ -114,7 +116,8 @@ int pgdb_fetch_param_fake_token(PGconn* conn, const char* stmt, const pgdb_param
 		PQclear((*result)->pg);
 		return 1;
 	}
-	if(set_fake_uuid((*result)->pg, 0, 0)) {
+	char uuid[16] = {0x00};
+	if(set_fake_uuid((*result)->pg, 0, 0, uuid)) {
 		PQclear((*result)->pg);
 		return 1;
 	}

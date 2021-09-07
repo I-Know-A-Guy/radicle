@@ -32,9 +32,35 @@
 #include "radicle/tests/auth/auth_fixture.hpp"
 #include "radicle/auth.h"
 
+/*
+
+#define FAKE_SESSION_ID 123
+
+PGDB_FETCH_FAKE(FetchSessionFake) {
+	PGDB_FAKE_RESULT_1("id");
+	PGDB_FAKE_INT(FAKE_SESSION_ID);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestOwnedSession) {
+	install_status_tuples_ok();
+	install_hook(PGDB_CREATE_FETCH_HOOK(FetchSessionFake));
+
+	auth_cookie_t* cookie = NULL;
+	uint32_t session = 0;
+	ASSERT_EQ(auth_make_owned_session(NULL, common_uuid, common_string, &cookie, &session), AUTH_OK);
+	EXPECT_TRUE(cookie != NULL);
+	EXPECT_EQ(session, FAKE_SESSION_ID);
+
+	auth_cookie_free(&cookie);
+}
+*/
+
 /**
  * @brief Tests if correct login works with username and cookies.
  */
+
+/*
 TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	string_t* email = manage_string("test-user@radicle.com");
 	string_t* password = manage_string("12345678");
@@ -95,3 +121,4 @@ TEST_F(RadicleConnectedAuthTests, IntegrationAuth) {
 	ASSERT_EQ(auth_update_password(conn, signed_in_account->uuid, manage_string("new password!")), 0);
 
 }
+*/

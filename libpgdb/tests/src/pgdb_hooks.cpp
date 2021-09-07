@@ -54,9 +54,9 @@ int set_fake_value(PGresult* result, const int row, const int column, char* valu
 	return 0;
 }
 
-int set_fake_uuid(PGresult* result, const int row, const int column) {
-	char uuid[16] = {0x00};
-	return set_fake_value(result, row, column, uuid, 16);
+int set_fake_uuid(PGresult* result, const int row, const int column, char* bytes) {
+	// char uuid[16] = {0x16, 0x16, 0x16, 0x44, 0x0e, 0x16, 0x0a, 0x60, 0x22, 0x16, 0x13, 0x16, 0x16, 0x6a, 0x56, 0x49};
+	return set_fake_value(result, row, column, bytes, 16);
 }
 
 int set_fake_int(PGresult* result, const int row, const int column, int value) {
@@ -99,7 +99,8 @@ int pgdb_fetch_param_fake_uuid(PGconn* conn, const char* stmt, const pgdb_params
 		PQclear((*result)->pg);
 		return 1;
 	}
-	if(set_fake_uuid((*result)->pg, 0, 0)) {
+	char uuid[16] = {0x00};
+	if(set_fake_uuid((*result)->pg, 0, 0, uuid)) {
 		PQclear((*result)->pg);
 		return 1;
 	}
