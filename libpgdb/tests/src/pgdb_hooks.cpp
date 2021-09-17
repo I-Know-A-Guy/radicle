@@ -17,6 +17,7 @@
  */
 
 #include "radicle/tests/pgdb_hooks.hpp"
+#include "radicle/pgdb.h"
 
 ExecStatusType pgdb_pq_result_status_fake_ok(PGconn* conn) {
 	return PGRES_COMMAND_OK;
@@ -68,6 +69,22 @@ int set_fake_int(PGresult* result, const int row, const int column, int value) {
 	}
 	free(buffer);
 	return 0;
+}
+
+int set_fake_uint64(PGresult* result, const int row, const int column, uint64_t value) {
+	uint64_t * buffer = (uint64_t*)malloc(sizeof(uint64_t));
+	*buffer = htonll((uint64_t)value);
+	if(set_fake_value(result, row, column, (char*)buffer, sizeof(uint64_t)))  {
+		free(buffer);
+		return 1;
+	}
+	free(buffer);
+	return 0;
+
+}
+
+int set_fake_timestamp(PGresult* result, const int row, const int column, time_t value) {
+	return set_fake_uint64(result, row, column, pgdb_convert_to_pg_timestamp(value));
 }
 
 int set_fake_text(PGresult* result, const int row, const int column) {

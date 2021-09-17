@@ -37,6 +37,7 @@
 
 #define PGDB_CREATE_FETCH_HOOK(name) subhook_new((void*)PQexecParams, (void*)name, SUBHOOK_64BIT_OFFSET)
 
+/** @todo rename all to use PGDB_FAKE_... */
 #define PGDB_FETCH_FAKE(name)\
 	PGresult* name(PGconn *conn, const char *command, int nParams, const Oid *paramTypes, const char *const *paramValues, const int *paramLengths, const int *paramFormats, int resultFormat)
 
@@ -57,11 +58,33 @@
 	const char* columns[] = {a};\
 	PGDB_FAKE_RESULTS(status, 1);
 
-#define PGDB_FAKE_RESULT_2(a, b)\
+#define PGDB_FAKE_RESULT_2(status, a, b)\
 	const char* columns[] = {a, b};\
 	PGDB_FAKE_RESULTS(status, 2);
-	
-       	
+
+#define PGDB_FAKE_RESULT_3(status, a, b, c)\
+	const char* columns[] = {a, b, c};\
+	PGDB_FAKE_RESULTS(status, 3);
+
+#define PGDB_FAKE_RESULT_4(status, a, b, c, d)\
+	const char* columns[] = {a, b, c, d};\
+	PGDB_FAKE_RESULTS(status, 4);
+
+#define PGDB_FAKE_RESULT_5(status, a, b, c, d, e)\
+	const char* columns[] = {a, b, c, d, e};\
+	PGDB_FAKE_RESULTS(status, 5);
+
+#define PGDB_FAKE_RESULT_6(status, a, b, c, d, e, f)\
+	const char* columns[] = {a, b, c, d, e, f};\
+	PGDB_FAKE_RESULTS(status, 6);
+
+#define PGDB_FAKE_RESULT_7(status, a, b, c, d, e, f, g)\
+	const char* columns[] = {a, b, c, d, e, f, g};\
+	PGDB_FAKE_RESULTS(status, 7);
+
+#define PGDB_FAKE_RESULT_8(status, a, b, c, d, e, f, g, h)\
+	const char* columns[] = {a, b, c, d, e, f, g, h};\
+	PGDB_FAKE_RESULTS(status, 8);
 
 #define PGDB_FAKE_FINISH() return result;
 
@@ -72,6 +95,10 @@
 
 #define PGDB_FAKE_UUID(val) PGDB_FAKE_VALUE(set_fake_uuid, val)
 #define PGDB_FAKE_INT(val) PGDB_FAKE_VALUE(set_fake_int, val)
+#define PGDB_FAKE_INT64(val) PGDB_FAKE_VALUE(set_fake_uint64, val)
+#define PGDB_FAKE_TIMESTAMP(val) PGDB_FAKE_VALUE(set_fake_timestamp, val)
+#define PGDB_FAKE_BOOL(val) PGDB_FAKE_VALUE(set_fake_bool, val)
+#define PGDB_FAKE_C_STR(val) PGDB_FAKE_VALUE(set_fake_c_str, val)
 
 /**
  * @brief Fake which always returns PGRES_COMMAND_OK as status
@@ -146,6 +173,30 @@ int set_fake_uuid(PGresult* result, const int row, const int column, char* bytes
  * @returns Returns 0 on succes.
  */
 int set_fake_int(PGresult* result, const int row, const int column, int value);
+
+/**
+ * @brief Sets a fake int.
+ *
+ * @param result Result to be filled with values.
+ * @param row Row of result to fill.
+ * @param column Column of value to be inserted.
+ * @param value Int to set.
+ *
+ * @returns Returns 0 on succes.
+ */
+int set_fake_uint64(PGresult* result, const int row, const int column, uint64_t value);
+
+/**
+ * @brief Sets a fake int.
+ *
+ * @param result Result to be filled with values.
+ * @param row Row of result to fill.
+ * @param column Column of value to be inserted.
+ * @param value Int to set.
+ *
+ * @returns Returns 0 on succes.
+ */
+int set_fake_timestamp(PGresult* result, const int row, const int column, time_t value);
 
 /**
  * @brief Sets a fake text.

@@ -229,18 +229,30 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* i
 	pgdb_params_free(&params);
 
 	if(PQntuples(result->pg) == 1) {
-		pgdb_get_uint32(result, 0, "id", id);
-		pgdb_get_text(result, 0, "salt", salt);
+		if(pgdb_get_uint32(result, 0, "id", id) || pgdb_get_text(result, 0, "salt", salt)) {
+			DEBUG("Cannot find columnd id or salt\n");
+			pgdb_result_free(&result);
+			string_free(salt);
+			*id = 0;
+			return 1;
+		}
 
 		if(pgdb_exists(result, "uuid", 0)) {
 			*account  = calloc(1, sizeof(auth_account_t));
-			pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid);
-			pgdb_get_text(result, 0, "email", &(*account)->email);
-			pgdb_get_text(result, 0, "password", &(*account)->password);
-			pgdb_get_enum(result, 0, "role", &auth_account_role_from_str, (int*)&(*account)->role);
-			pgdb_get_bool(result, 0, "verified", &(*account)->verified);
-			pgdb_get_bool(result, 0, "active", &(*account)->active);
-			pgdb_get_timestamp(result, 0, "created", &(*account)->created);
+			if(
+			pgdb_get_uuid(result, 0, "uuid", &(*account)->uuid) ||
+			pgdb_get_text(result, 0, "email", &(*account)->email) ||
+			pgdb_get_enum(result, 0, "role", &auth_account_role_from_str, (int*)&(*account)->role) ||
+			pgdb_get_bool(result, 0, "verified", &(*account)->verified) ||
+			pgdb_get_bool(result, 0, "active", &(*account)->active) ||
+			pgdb_get_timestamp(result, 0, "created", &(*account)->created)) {
+				DEBUG("Failed to read in all account columns\n");
+				pgdb_result_free(&result);
+				*id = 0;
+				string_free(salt);
+				auth_account_free(account);
+				return 1;
+			}
 		}
 	} else {
 		*id = 0;
