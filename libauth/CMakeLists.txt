@@ -35,7 +35,6 @@ if(BUILD_TESTING)
 		radicle_test
 		PRIVATE
 			tests/include/radicle/tests/auth/auth_fixture.hpp
-			tests/src/auth_fixture.cpp	
 			tests/src/crypto.cpp
 			tests/src/db.cpp
 			tests/src/auth.cpp

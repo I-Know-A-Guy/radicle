@@ -18,8 +18,6 @@
 
 /**
  * @file
- * @todo Create more tests per test, Test OK, No data, FAtal error, and wrong
- * column names
  */
 
 #include <libpq-fe.h>
