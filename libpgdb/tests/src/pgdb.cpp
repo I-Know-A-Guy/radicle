@@ -23,39 +23,30 @@
 #include "radicle/tests/pgdb_hooks.hpp"
 #include "radicle/pgdb.h"
 
-class PGDBTest: public RadicleTests {
-	public:
-
-		const char* conninfo = "host=localhost port=5432 dbname=ikag user=postgres password=postgres connect_timeout=10";
-		PGconn* conn = NULL;
-
-	protected:
-
-		/*
-		 * Could be replaced by 'static void SetUpTestSuite()' to speed up tests.
-		 * But if one test fails to completely clean a conn, the next test could fail aswell.
-		 * Like started transactions which havent been commited.
-		 */
-		void SetUp() override {
-			ASSERT_EQ(pgdb_connect(conninfo, &conn), 0);
-			RadicleTests::SetUp();
-		}
-
-		void TearDown() override {
-			PQfinish(conn);
-			RadicleTests::TearDown();
-		}
-
-};
-
-TEST_F(PGDBTest, TestFixtureSetup) {
-	// Do nothing since this will test the SetUp function
+PGconn* PQconnectdbFake(const char *conninfo) {
+	return NULL;
 }
 
-TEST_F(PGDBTest, TestPingInfo) {
-	PGPing status;
-	const char* info = pgdb_ping_info(conninfo, &status);
-	ASSERT_EQ(status, PQPING_OK) << info;
+ConnStatusType PQstatusSuccess(const PGconn *conn) {
+	return CONNECTION_OK;
+}
+
+ConnStatusType PQstatusError(const PGconn *conn) {
+	return CONNECTION_BAD;
+}
+
+TEST_F(RadicleTests, TestFixtureSetupSuccess) {
+	install_hook(subhook_new((void*)PQconnectdb, (void*)PQconnectdbFake, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)PQstatus, (void*)PQstatusSuccess, SUBHOOK_64BIT_OFFSET));
+	PGconn* conn = NULL;	
+	ASSERT_EQ(pgdb_connect("conn info", &conn), 0);
+}
+
+TEST_F(RadicleTests, TestFixtureSetupError) {
+	install_hook(subhook_new((void*)PQconnectdb, (void*)PQconnectdbFake, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)PQstatus, (void*)PQstatusError, SUBHOOK_64BIT_OFFSET));
+	PGconn* conn = NULL;	
+	ASSERT_EQ(pgdb_connect("conn info", &conn), 1);
 }
 
 TEST_F(RadiclePGDBHooks, TestExecute) {
@@ -117,7 +108,7 @@ TEST(PGDBParamsTest, TestParamsNew) {
 	ASSERT_TRUE(params == NULL);
 }
 
-TEST_F(PGDBTest, TestBinds) {
+TEST_F(RadicleTests, TestBinds) {
 	pgdb_params_t* params = pgdb_params_new(8);
 	
 	pgdb_bind_null(params);
