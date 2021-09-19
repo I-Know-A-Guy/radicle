@@ -35,10 +35,10 @@
 #include "radicle/pgdb.h"
 #include "radicle/tests/radicle_fixture.hpp"
 
-#define PGDB_CREATE_FETCH_HOOK(name) subhook_new((void*)PQexecParams, (void*)name, SUBHOOK_64BIT_OFFSET)
+#define PGDB_FAKE_CREATE_FETCH_HOOK(name) subhook_new((void*)PQexecParams, (void*)name, SUBHOOK_64BIT_OFFSET)
 
 /** @todo rename all to use PGDB_FAKE_... */
-#define PGDB_FETCH_FAKE(name)\
+#define PGDB_FAKE_FETCH(name)\
 	PGresult* name(PGconn *conn, const char *command, int nParams, const Oid *paramTypes, const char *const *paramValues, const int *paramLengths, const int *paramFormats, int resultFormat)
 
 #define PGDB_FAKE_RESULTS(status, n)\
@@ -52,7 +52,6 @@
 	}\
 
 #define PGDB_FAKE_EMPTY_RESULT(status) return PQmakeEmptyPGresult(NULL, status);
-	
 
 #define PGDB_FAKE_RESULT_1(status, a)\
 	const char* columns[] = {a};\
