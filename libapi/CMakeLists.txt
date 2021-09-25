@@ -34,11 +34,12 @@ target_link_libraries(
 	${JANSSON_LIBRARY}
 	${PCRE2_LIBRARY}
 )
-
 if(BUILD_TESTING)
 	target_sources(
 		radicle_test
 		PRIVATE
+			tests/include/radicle/tests/api/api_fixture.hpp
+			tests/src/endpoints/endpoint.cpp
 	)
 
 	target_include_directories(
