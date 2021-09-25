@@ -79,6 +79,16 @@ TEST_F(APITests, TestEndpointInitNoFreeConnections) {
 	EXPECT_EQ(response->status, 503);
 }
 
+TEST_F(APITests, TestEndpointLoadJsonNoBody) {
+	api_instance_t* instance = manage_instance();
+
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+
+	ASSERT_EQ(api_callback_endpoint_init(request, response, instance), U_CALLBACK_COMPLETE);
+	
+	EXPECT_EQ(response->status, 400);
+}
 /*
 PGDB_FAKE_FETCH_STORY(RespondStory) {
 	PGDB_FAKE_STORY_BRANCH(RespondStory, 0); // Session Id
