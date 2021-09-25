@@ -1,8 +1,10 @@
+#include "radicle/api/instance.h"
 #include "radicle/tests/pgdb_hooks.hpp"
 #include <ulfius.h>
 
 class APITests: public RadiclePGDBHooks {
 
+	std::vector<api_instance_t*> instances; 
 	std::vector<_u_request*> requests; 
 	std::vector<_u_response*> responses; 
 
@@ -10,6 +12,10 @@ class APITests: public RadiclePGDBHooks {
 
 	void TearDown() {
 		RadiclePGDBHooks::TearDown();
+		for(std::vector<api_instance_t*>::iterator iter = instances.begin(); iter != instances.end(); iter++) {
+			api_instance_free(iter.base());
+		}
+
 		for(std::vector<_u_request*>::iterator iter = requests.begin(); iter != requests.end(); iter++) {
 			ulfius_clean_request(*iter.base());
 		}
@@ -17,6 +23,12 @@ class APITests: public RadiclePGDBHooks {
 		for(std::vector<_u_response*>::iterator iter = responses.begin(); iter != responses.end(); iter++) {
 			ulfius_clean_response(*iter.base());
 		}
+	}
+
+	api_instance_t* manage_instance() {
+		api_instance_t* instance  = (api_instance_t*)calloc(1, sizeof(api_instance_t));
+		instance->queue = pgdb_connection_queue_new("conn info", 10, 10);
+		return instance;
 	}
 
 	_u_request* manage_request() {
