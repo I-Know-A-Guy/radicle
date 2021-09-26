@@ -81,14 +81,29 @@ TEST_F(APITests, TestEndpointInitNoFreeConnections) {
 
 TEST_F(APITests, TestEndpointLoadJsonNoBody) {
 	api_instance_t* instance = manage_instance();
-
 	_u_request* request = manage_request();
 	_u_response* response = manage_response();
 
-	ASSERT_EQ(api_callback_endpoint_init(request, response, instance), U_CALLBACK_COMPLETE);
-	
+	ASSERT_EQ(api_callback_endpoint_load_json_body(request, response, instance), U_CALLBACK_COMPLETE);
 	EXPECT_EQ(response->status, 400);
 }
+
+TEST_F(APITests, TestEndpointLoadJsonInvalid) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+
+	/**
+	 * @todo contineu
+	 */
+	char body[] = "{\"json\":\"value}";
+	request->binary_body = strdup(body);
+	request->binary_body_length = strlen(body);
+
+	ASSERT_EQ(api_callback_endpoint_load_json_body(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 400);
+}
+
 /*
 PGDB_FAKE_FETCH_STORY(RespondStory) {
 	PGDB_FAKE_STORY_BRANCH(RespondStory, 0); // Session Id
