@@ -1,4 +1,6 @@
+#include "radicle/api/endpoints/endpoint.h"
 #include "radicle/api/instance.h"
+#include "radicle/pgdb.h"
 #include "radicle/tests/pgdb_hooks.hpp"
 #include <ulfius.h>
 
@@ -28,12 +30,15 @@ class APITests: public RadiclePGDBHooks {
 	api_instance_t* manage_instance() {
 		api_instance_t* instance  = (api_instance_t*)calloc(1, sizeof(api_instance_t));
 		instance->queue = pgdb_connection_queue_new("conn info", 10, 10);
+		instance->signature_key = string_from_literal("signature key");;
 		return instance;
 	}
 
 	_u_request* manage_request() {
 		struct _u_request* request = (struct _u_request*)calloc(1, sizeof(struct _u_request));
 		ulfius_init_request(request);
+
+		u_map_put(request->map_header, "content-type", "application/json");
 
 		request->client_address = (struct sockaddr*)calloc(1, sizeof(sockaddr_in));
 		request->client_address->sa_family = AF_INET;
@@ -50,5 +55,12 @@ class APITests: public RadiclePGDBHooks {
 		ulfius_init_response(response);
 		responses.push_back(response);
 		return response;
+	}
+
+	void create_endpoint(_u_response* response) {
+		api_endpoint_t* endpoint = (api_endpoint_t*)calloc(1, sizeof(api_endpoint_t));
+		endpoint->conn = (pgdb_connection_t*)calloc(1, sizeof(pgdb_connection_t));
+		endpoint->request_log = auth_request_log_new();
+		response->shared_data = endpoint;
 	}
 };

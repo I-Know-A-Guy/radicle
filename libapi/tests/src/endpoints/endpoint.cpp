@@ -92,16 +92,32 @@ TEST_F(APITests, TestEndpointLoadJsonInvalid) {
 	api_instance_t* instance = manage_instance();
 	_u_request* request = manage_request();
 	_u_response* response = manage_response();
+	create_endpoint(response);
 
-	/**
-	 * @todo contineu
-	 */
 	char body[] = "{\"json\":\"value}";
-	request->binary_body = strdup(body);
-	request->binary_body_length = strlen(body);
+	ulfius_set_string_body_request(request, body);
 
 	ASSERT_EQ(api_callback_endpoint_load_json_body(request, response, instance), U_CALLBACK_COMPLETE);
 	EXPECT_EQ(response->status, 400);
+}
+
+TEST_F(APITests, TestEndpointLoadJsonSuccess) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	create_endpoint(response);
+
+	char body[] = "{\"json\":\"value\"}";
+	ulfius_set_string_body_request(request, body);
+
+	ASSERT_EQ(api_callback_endpoint_load_json_body(request, response, instance), U_CALLBACK_CONTINUE);
+	api_endpoint_t* endpoint = (api_endpoint_t*)response->shared_data;
+	ASSERT_TRUE(endpoint->json_body != NULL);
+	json_t* value = json_object_get(endpoint->json_body, "json");
+	ASSERT_TRUE(value != NULL);
+	EXPECT_STREQ(json_string_value(value), "value");
+
+	api_endpoint_free((api_endpoint_t*)response->shared_data);
 }
 
 /*
