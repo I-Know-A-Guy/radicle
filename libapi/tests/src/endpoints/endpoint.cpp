@@ -225,3 +225,66 @@ TEST_F(APITests, TestEndpointCheckForSessionAccountDeactivated) {
 	EXPECT_EQ(response->status, 403);
 }
 
+TEST_F(APITests, TestEndointCheckForAuthSuccess) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	endpoint->authenticated = true;
+
+	ASSERT_EQ(api_callback_endpoint_check_for_authentication(request, response, instance), U_CALLBACK_CONTINUE);
+
+	api_endpoint_free(endpoint);
+}
+
+TEST_F(APITests, TestEndointCheckForAuthFailure) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	endpoint->authenticated = false;
+
+	ASSERT_EQ(api_callback_endpoint_check_for_authentication(request, response, instance), U_CALLBACK_COMPLETE);
+}
+
+TEST_F(APITests, TestEndointCheckForVerifiedEmailFailureNotSignedIn) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	endpoint->authenticated = false;
+
+	ASSERT_EQ(api_callback_endpoint_check_for_verified_email(request, response, instance), U_CALLBACK_COMPLETE);
+}
+
+TEST_F(APITests, TestEndointCheckForVerifiedEmailFailureNotVerified) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	endpoint->authenticated = true;
+	endpoint->account = (auth_account_t*)calloc(1, sizeof(auth_account_t));
+	endpoint->account->verified = false;
+
+	ASSERT_EQ(api_callback_endpoint_check_for_verified_email(request, response, instance), U_CALLBACK_COMPLETE);
+}
+
+TEST_F(APITests, TestEndointCheckForVerifiedEmailSuccess) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	endpoint->authenticated = true;
+	endpoint->account = (auth_account_t*)calloc(1, sizeof(auth_account_t));
+	endpoint->account->verified = true;
+
+	ASSERT_EQ(api_callback_endpoint_check_for_verified_email(request, response, instance), U_CALLBACK_CONTINUE);
+
+	api_endpoint_free(endpoint);
+}
+
