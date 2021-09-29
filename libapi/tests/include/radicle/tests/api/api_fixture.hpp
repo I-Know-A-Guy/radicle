@@ -30,7 +30,10 @@ class APITests: public RadiclePGDBHooks {
 	api_instance_t* manage_instance() {
 		api_instance_t* instance  = (api_instance_t*)calloc(1, sizeof(api_instance_t));
 		instance->queue = pgdb_connection_queue_new("conn info", 10, 10);
-		instance->signature_key = string_from_literal("signature key");;
+		instance->signature_key = string_from_literal("signature key");
+		instance->session_cookie = (api_cookie_config_t*)calloc(1, sizeof(api_cookie_config_t));
+		instance->session_cookie->max_age = 0;
+		instance->session_cookie->same_site = U_COOKIE_SAME_SITE_NONE;
 		return instance;
 	}
 
@@ -57,10 +60,11 @@ class APITests: public RadiclePGDBHooks {
 		return response;
 	}
 
-	void create_endpoint(_u_response* response) {
+	api_endpoint_t* create_endpoint(_u_response* response) {
 		api_endpoint_t* endpoint = (api_endpoint_t*)calloc(1, sizeof(api_endpoint_t));
 		endpoint->conn = (pgdb_connection_t*)calloc(1, sizeof(pgdb_connection_t));
 		endpoint->request_log = auth_request_log_new();
 		response->shared_data = endpoint;
+		return endpoint;
 	}
 };

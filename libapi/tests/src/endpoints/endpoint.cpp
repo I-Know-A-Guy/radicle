@@ -8,6 +8,7 @@
 #include <libpq-fe.h>
 #include <ulfius.h>
 
+#include "radicle/auth/crypto.h"
 #include "radicle/pgdb.h"
 #include "radicle/tests/api/api_fixture.hpp"
 #include "radicle/api/endpoints/endpoint.h"
@@ -120,20 +121,107 @@ TEST_F(APITests, TestEndpointLoadJsonSuccess) {
 	api_endpoint_free((api_endpoint_t*)response->shared_data);
 }
 
-/*
-PGDB_FAKE_FETCH_STORY(RespondStory) {
-	PGDB_FAKE_STORY_BRANCH(RespondStory, 0); // Session Id
+TEST_F(APITests, TestEndpointCheckForSessionNoSessionId) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	ASSERT_EQ(api_callback_endpoint_check_for_session(request, response, instance), U_CALLBACK_CONTINUE);
+	EXPECT_FALSE(endpoint->authenticated);
+}
+
+PGDB_FAKE_FETCH_STORY(FetchEmptySessionId) {
+	// get_session_by_cookie
+	PGDB_FAKE_STORY_BRANCH(FetchEmptySessionId, 0);
+		PGDB_FAKE_EMPTY_RESULT(PGRES_TUPLES_OK);
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	// insert session id returing session id
+	PGDB_FAKE_STORY_BRANCH(FetchEmptySessionId, 1);
 		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
-		PGDB_FAKE_INT(100);
+		PGDB_FAKE_INT(5);
 		PGDB_FAKE_FINISH();
 	PGDB_FAKE_STORY_BRANCH_END();
-}
-*/
 
-/**
-	 * @todo fake initialize api instance
-	 * @todo fake pgdb_connect (for pgdb_claim_connection) 
-	 * @todo fake auth_make_free_session or auth_make_owned_session
-	 * @todo fake auth_log_access
-	 */
+	return NULL;
+}
+
+#define FAKE_COOKIE_STRING "xdrHw2vjKmpu5hPRae3MXeyf5CA6P248ikhb2xHxjbduWtdW29apXvQDhARDnHcdAHwLPLHZ3ffTEccdmCLqGvH9JAhkeZuZYijPH2ijtT3bHdXhupbgxNQAjLhhRkWt-xdrHw2vjKmpu5hPRae3MXeyf5CA6P248ikhb2xHxjbduWtdW29apXvQDhARDnHcdAHwLPLHZ3ffTEccdmCLqGvH9JAhkeZuZYijPH2ijtT3bHdXhupbgxNQAjLhhRkWt"
+
+TEST_F(APITests, TestEndpointCheckForSessionInvalidSessionId) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	PGDB_FAKE_INIT_FETCH_STORY(FetchEmptySessionId);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptySessionId));
+
+	u_map_put(request->map_cookie, "session-id", FAKE_COOKIE_STRING);
+	ASSERT_EQ(api_callback_endpoint_check_for_session(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 400);
+}
+
+static char FAKE_UUID[16] = {0x1f, 0x2f, 0x2f, 0x2f, 0x02, 0x2f, 0x2f, 0x4b, 0x2f, 0x2f, 0x2f, 0x2f, 0x2f, 0x2f, 0x70, 0x2f};
+
+PGDB_FAKE_FETCH_STORY(FetchSessionIdWrongSalt) {
+	// get_session_by_cookie
+	PGDB_FAKE_STORY_BRANCH(FetchSessionIdWrongSalt, 0);
+		PGDB_FAKE_RESULT_8(PGRES_TUPLES_OK, "id", "salt", "uuid", "email", "role", "verified", "active", "created");
+		PGDB_FAKE_INT(5);
+		PGDB_FAKE_C_STR("session-salt");
+		PGDB_FAKE_UUID(FAKE_UUID);
+		PGDB_FAKE_C_STR("email");
+		PGDB_FAKE_C_STR(auth_account_role_to_str(ROLE_USER));
+		PGDB_FAKE_BOOL(true);
+		PGDB_FAKE_BOOL(false);
+		PGDB_FAKE_TIMESTAMP(1000000);
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	// insert session id returing session id
+	PGDB_FAKE_STORY_BRANCH(FetchSessionIdWrongSalt, 1);
+		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
+		PGDB_FAKE_INT(5);
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	return NULL;
+}
+
+TEST_F(APITests, TestEndpointCheckForSessionInvalidSessionHash) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	PGDB_FAKE_INIT_FETCH_STORY(FetchSessionIdWrongSalt);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchSessionIdWrongSalt));
+
+	u_map_put(request->map_cookie, "session-id", FAKE_COOKIE_STRING);
+	ASSERT_EQ(api_callback_endpoint_check_for_session(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 400);
+}
+
+
+int hmac_verify_salted_fake(const string_t* key, const string_t* salt, const string_t* signature, const string_t* input) {
+	return 0;
+}
+
+TEST_F(APITests, TestEndpointCheckForSessionAccountDeactivated) {
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	PGDB_FAKE_INIT_FETCH_STORY(FetchSessionIdWrongSalt);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchSessionIdWrongSalt));
+
+	install_hook(subhook_new((void*)hmac_verify_salted, (void*)hmac_verify_salted_fake, SUBHOOK_64BIT_OFFSET));
+
+	u_map_put(request->map_cookie, "session-id", FAKE_COOKIE_STRING);
+	ASSERT_EQ(api_callback_endpoint_check_for_session(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 403);
+}
 
