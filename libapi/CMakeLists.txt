@@ -40,6 +40,7 @@ if(BUILD_TESTING)
 		PRIVATE
 			tests/include/radicle/tests/api/api_fixture.hpp
 			tests/src/endpoints/endpoint.cpp
+			tests/src/endpoints/auth.cpp
 	)
 
 	target_include_directories(

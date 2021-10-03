@@ -1,7 +1,5 @@
 /**
  * @file
- * @todo first implement all tests for functions which do not depend on
- * different functions
  */
 
 #include <gtest/gtest.h>

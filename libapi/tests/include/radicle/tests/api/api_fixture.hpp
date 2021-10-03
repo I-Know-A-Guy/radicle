@@ -34,6 +34,7 @@ class APITests: public RadiclePGDBHooks {
 		instance->session_cookie = (api_cookie_config_t*)calloc(1, sizeof(api_cookie_config_t));
 		instance->session_cookie->max_age = 0;
 		instance->session_cookie->same_site = U_COOKIE_SAME_SITE_NONE;
+		instance->verification_reroute_url = string_from_literal("Reroute Url");
 		return instance;
 	}
 
@@ -65,6 +66,16 @@ class APITests: public RadiclePGDBHooks {
 		endpoint->conn = (pgdb_connection_t*)calloc(1, sizeof(pgdb_connection_t));
 		endpoint->request_log = auth_request_log_new();
 		response->shared_data = endpoint;
+		return endpoint;
+	}
+
+	api_endpoint_t* create_authenticated_endpoint(_u_response* response) {
+		api_endpoint_t* endpoint = create_endpoint(response); 
+		endpoint->account = (auth_account_t*)calloc(1, sizeof(auth_account_t));
+		unsigned char uuid[16] = {0x0};
+		endpoint->account->uuid = uuid_new(uuid);
+		endpoint->account->email = string_from_literal("account-email");
+		endpoint->authenticated = true;
 		return endpoint;
 	}
 };

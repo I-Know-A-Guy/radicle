@@ -78,7 +78,7 @@ TEST_F(RadicleAuthTests, TestSaveAccountWrongColumnds) {
 }
 
 TEST_F(RadicleAuthTests, TestUpdateAccountPasswordSuccess) {
-	install_execute_param_always_success();
+	install_execute_always_success();
 	ASSERT_EQ(auth_update_account_password(NULL, common_uuid, common_string), 0);
 }
 

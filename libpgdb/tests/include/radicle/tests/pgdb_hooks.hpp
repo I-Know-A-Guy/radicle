@@ -325,19 +325,11 @@ class RadiclePGDBHooks: public RadicleTests {
 		/**
 		 * @brief Replaces \ref pgdb_execute with \ref pgdb_execute_fake 
 		 */
-		subhook_t install_execute_always_success() {
+		void install_execute_always_success() {
 			subhook_t buf = subhook_new((void*)pgdb_execute, (void*)pgdb_execute_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
-			return buf;
-		}
-
-		/**
-		 * @brief Replaces \ref pgdb_execute_param with \ref pgdb_execute_param_fake 
-		 */
-		subhook_t install_execute_param_always_success() {
-			subhook_t buf = subhook_new((void*)pgdb_execute_param, (void*)pgdb_execute_param_fake, SUBHOOK_64BIT_OFFSET);
+			buf = subhook_new((void*)pgdb_execute_param, (void*)pgdb_execute_param_fake, SUBHOOK_64BIT_OFFSET);
 			install_hook(buf);
-			return buf;
 		}
 
 		/**
