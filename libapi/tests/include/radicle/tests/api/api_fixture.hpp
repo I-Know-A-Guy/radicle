@@ -4,6 +4,31 @@
 #include "radicle/tests/pgdb_hooks.hpp"
 #include <ulfius.h>
 
+#define API_EMPTY_RESULT(name)\
+       	PGDB_FAKE_FETCH(name) {\
+	PGDB_FAKE_EMPTY_RESULT(PGRES_TUPLES_OK);\
+}
+
+#define API_FAKE_VERIFIED_ACCOUNT(name, index) \
+	PGDB_FAKE_STORY_BRANCH(name, index);\
+		PGDB_FAKE_RESULT_6(PGRES_TUPLES_OK, "uuid", "password", "role", "verified", "active", "created");\
+		char name ## index ## fake_uuid[16] = {0x1};\
+		PGDB_FAKE_UUID(name ## index ## fake_uuid);\
+		PGDB_FAKE_C_STR("password");\
+		PGDB_FAKE_C_STR(auth_account_role_to_str(ROLE_USER));\
+		PGDB_FAKE_BOOL(true);\
+		PGDB_FAKE_BOOL(true);\
+		PGDB_FAKE_TIMESTAMP(time(NULL));\
+		PGDB_FAKE_FINISH();\
+	PGDB_FAKE_STORY_BRANCH_END();
+
+#define API_FAKE_SESSION(name, index)\
+	PGDB_FAKE_STORY_BRANCH(name, index);\
+		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");\
+		PGDB_FAKE_INT(1234);\
+		PGDB_FAKE_FINISH();\
+	PGDB_FAKE_STORY_BRANCH_END();
+
 class APITests: public RadiclePGDBHooks {
 
 	std::vector<api_instance_t*> instances; 
@@ -35,6 +60,7 @@ class APITests: public RadiclePGDBHooks {
 		instance->session_cookie->max_age = 0;
 		instance->session_cookie->same_site = U_COOKIE_SAME_SITE_NONE;
 		instance->verification_reroute_url = string_from_literal("Reroute Url");
+		instance->password_reset_url = string_from_literal("pw reset url");
 		return instance;
 	}
 
