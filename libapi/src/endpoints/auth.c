@@ -120,7 +120,11 @@ int api_auth_callback_register_verify(const struct _u_request * request, struct 
 	api_endpoint_t* endpoint = response->shared_data;
 	api_instance_t* instance = user_data;
 
-	if(!u_map_has_key(request->map_url, "t")) 
+	/**
+	 * somehow there is a case where url?t= yields a length of 1 instead of
+	 * 0
+	 */
+	if(!u_map_has_key(request->map_url, "t") || u_map_get_length(request->map_url, "t") <= 1) 
 		return RESPOND(400, "Missing parameter for token.", VALIDATION_MISSING_PARAMETER);
 
 	if(pgdb_transaction_begin(endpoint->conn->connection))
