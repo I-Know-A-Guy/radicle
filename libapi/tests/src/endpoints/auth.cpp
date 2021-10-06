@@ -52,11 +52,6 @@ TEST_F(APITests, TestAuthCallbackRegisterDuplicateMail) {
 	PGDB_FAKE_INIT_FETCH_STORY(FetchDuplicateEmail);
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchDuplicateEmail));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-
-	api_endpoint_t* endpoint = create_endpoint(response);
 	endpoint->json_body = json_pack("{s:s, s:s}", "email", "email@mail.com", "password", "Password1!");
 
 	ASSERT_EQ(api_auth_callback_register(request, response, instance), U_CALLBACK_COMPLETE);
@@ -101,11 +96,6 @@ TEST_F(APITests, TestAuthCallbackRegisterSuccess) {
 	PGDB_FAKE_INIT_FETCH_STORY(FetchRegisterUuid);
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchRegisterUuid));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-
-	api_endpoint_t* endpoint = create_endpoint(response);
 	endpoint->json_body = json_pack("{s:s, s:s}", "email", "email@mail.com", "password", "Password1!");
 
 	ASSERT_EQ(api_auth_callback_register(request, response, instance), U_CALLBACK_COMPLETE);
@@ -123,11 +113,7 @@ TEST_F(APITests, TestAuthCallbackResendVerificationMailAlreadyVerified) {
 
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(MakeSessionId));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_authenticated_endpoint(response);
-
+	authenticate_endpoint();
 	endpoint->account->verified = true;
 
 	ASSERT_EQ(api_auth_callback_resend_verification_mail(request, response, instance), U_CALLBACK_COMPLETE);
@@ -141,10 +127,7 @@ TEST_F(APITests, TestAuthCallbackResendVerificationMailSuccess) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(MakeSessionId));
 	install_execute_always_success();
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_authenticated_endpoint(response);
+	authenticate_endpoint();
 
 	endpoint->account->verified = false;
 
@@ -154,11 +137,6 @@ TEST_F(APITests, TestAuthCallbackResendVerificationMailSuccess) {
 }
 
 TEST_F(APITests, TestAuthCallbackRegisterVerifyMissingParameter) {
-
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
 
 	ASSERT_EQ(api_auth_callback_register_verify(request, response, instance), U_CALLBACK_COMPLETE);
 
@@ -174,11 +152,7 @@ TEST_F(APITests, TestAuthCallbackRegisterVerifyTokenNotFound) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(EmptyVerifyToken));
 	install_execute_always_success();
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
 	u_map_put(request->map_url, "t", "token");
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
 
 	ASSERT_EQ(api_auth_callback_register_verify(request, response, instance), U_CALLBACK_COMPLETE);
 
@@ -207,11 +181,7 @@ TEST_F(APITests, TestAuthCallbackRegisterVerifyWrongTokenFound) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongTokenType));
 	install_execute_always_success();
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
 	u_map_put(request->map_url, "t", "token");
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
 
 	ASSERT_EQ(api_auth_callback_register_verify(request, response, instance), U_CALLBACK_COMPLETE);
 
@@ -240,11 +210,7 @@ TEST_F(APITests, TestAuthCallbackRegisterVerifySuccess) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(RegisterVerifySuccess));
 	install_execute_always_success();
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
 	u_map_put(request->map_url, "t", "token");
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
 
 	ASSERT_EQ(api_auth_callback_register_verify(request, response, instance), U_CALLBACK_COMPLETE);
 
@@ -268,11 +234,6 @@ TEST_F(APITests, TestAuthCallbackSignInSuccess) {
 
 	install_hook(subhook_new((void*)auth_verify_password, (void*)auth_verify_password_fake, SUBHOOK_64BIT_OFFSET));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
-
 	endpoint->json_body = json_pack("{s:s, s:s}", "email", "test@mail.com", "password", "Password1!");
 
 	ASSERT_EQ(api_auth_callback_sign_in(request, response, instance), U_CALLBACK_COMPLETE);
@@ -291,11 +252,6 @@ TEST_F(APITests, TestAuthCallbackSignInWrongPassword) {
 
 	install_hook(subhook_new((void*)auth_verify_password, (void*)auth_verify_password_fake_failure, SUBHOOK_64BIT_OFFSET));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
-
 	endpoint->json_body = json_pack("{s:s, s:s}", "email", "test@mail.com", "password", "Password1!");
 
 	ASSERT_EQ(api_auth_callback_sign_in(request, response, instance), U_CALLBACK_COMPLETE);
@@ -308,11 +264,6 @@ API_EMPTY_RESULT(EmptyAccount);
 TEST_F(APITests, TestAuthCallbackSignInAccountNotFound) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(EmptyAccount));
 	install_execute_always_success();
-
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
 
 	endpoint->json_body = json_pack("{s:s, s:s}", "email", "test@mail.com", "password", "Password1!");
 
@@ -337,11 +288,6 @@ TEST_F(APITests, AuthCallbackSendPasswordResetSuccess) {
 	PGDB_FAKE_INIT_FETCH_STORY(SendPasswordReset);
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(SendPasswordReset));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
-
 	endpoint->json_body = json_pack("{s:s}", "email", "test@mail.com");
 
 	ASSERT_EQ(api_auth_callback_send_password_reset(request, response, instance), U_CALLBACK_COMPLETE);
@@ -359,11 +305,6 @@ TEST_F(APITests, AuthCallbackSendPasswordResetNoAccount) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(SendPasswordResetNoAccount));
 	install_hook(subhook_new((void*)send_mail_not_associated, (void*)send_mail_not_associated_fake, SUBHOOK_64BIT_OFFSET));
 
-	api_instance_t* instance = manage_instance();
-	_u_request* request = manage_request();
-	_u_response* response = manage_response();
-	api_endpoint_t* endpoint = create_endpoint(response);
-
 	endpoint->json_body = json_pack("{s:s}", "email", "test@mail.com");
 
 	ASSERT_EQ(api_auth_callback_send_password_reset(request, response, instance), U_CALLBACK_COMPLETE);
@@ -371,6 +312,71 @@ TEST_F(APITests, AuthCallbackSendPasswordResetNoAccount) {
 	EXPECT_EQ(response->status, 200);
 }
 
+PGDB_FAKE_FETCH_STORY(PasswordReset) {
+	PGDB_FAKE_STORY_BRANCH(PasswordReset, 0);
+		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
+		char fake_uuid[16] = {0x1};
+		PGDB_FAKE_UUID(fake_uuid);
+		PGDB_FAKE_C_STR(token_type_to_str(PASSWORD_RESET));
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	API_FAKE_SESSION(PasswordReset, 1);
+
+	return NULL;
+}
+
 TEST_F(APITests, AuthCallbackResetPasswordSuccess) {
-/** @todo continue here */	
+
+	install_execute_always_success();
+	PGDB_FAKE_INIT_FETCH_STORY(PasswordReset);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(PasswordReset));
+
+	endpoint->json_body = json_pack("{s:s, s:s}", "password", "New Password1!", "token", "token!");
+
+	ASSERT_EQ(api_auth_callback_reset_password(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 200);
+
+}
+
+API_EMPTY_RESULT(ResetPasswordEmptyToken);
+
+TEST_F(APITests, AuthCallbackResetPasswordTokenNotFound) {
+
+	install_execute_always_success();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(ResetPasswordEmptyToken));
+
+	endpoint->json_body = json_pack("{s:s, s:s}", "password", "New Password1!", "token", "token!");
+
+	ASSERT_EQ(api_auth_callback_reset_password(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 400);
+}
+
+PGDB_FAKE_FETCH_STORY(PasswordResetWrongToken) {
+	PGDB_FAKE_STORY_BRANCH(PasswordResetWrongToken, 0);
+		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
+		char fake_uuid[16] = {0x1};
+		PGDB_FAKE_UUID(fake_uuid);
+		PGDB_FAKE_C_STR(token_type_to_str(NONE));
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	API_FAKE_SESSION(PasswordResetWrongToken, 1);
+
+	return NULL;
+}
+
+TEST_F(APITests, AuthCallbackResetPasswordWrongToken) {
+
+	install_execute_always_success();
+	PGDB_FAKE_INIT_FETCH_STORY(PasswordResetWrongToken);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(PasswordResetWrongToken));
+
+	endpoint->json_body = json_pack("{s:s, s:s}", "password", "New Password1!", "token", "token!");
+
+	ASSERT_EQ(api_auth_callback_reset_password(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 400);
 }

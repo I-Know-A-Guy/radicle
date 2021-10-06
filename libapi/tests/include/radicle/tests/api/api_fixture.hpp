@@ -37,7 +37,21 @@ class APITests: public RadiclePGDBHooks {
 
 	protected:
 
-	void TearDown() {
+	api_instance_t* instance;
+	_u_request* request;
+	_u_response* response;
+	api_endpoint_t* endpoint;
+
+
+	void SetUp() override {
+		instance = manage_instance();
+		request = manage_request();
+		response = manage_response();
+		endpoint = create_endpoint(response);
+		RadiclePGDBHooks::SetUp();
+	}
+
+	void TearDown() override {
 		RadiclePGDBHooks::TearDown();
 		for(std::vector<api_instance_t*>::iterator iter = instances.begin(); iter != instances.end(); iter++) {
 			api_instance_free(iter.base());
@@ -95,13 +109,11 @@ class APITests: public RadiclePGDBHooks {
 		return endpoint;
 	}
 
-	api_endpoint_t* create_authenticated_endpoint(_u_response* response) {
-		api_endpoint_t* endpoint = create_endpoint(response); 
+	void authenticate_endpoint() {
 		endpoint->account = (auth_account_t*)calloc(1, sizeof(auth_account_t));
 		unsigned char uuid[16] = {0x0};
 		endpoint->account->uuid = uuid_new(uuid);
 		endpoint->account->email = string_from_literal("account-email");
 		endpoint->authenticated = true;
-		return endpoint;
 	}
 };

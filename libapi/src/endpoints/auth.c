@@ -299,18 +299,11 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	}
 	string_free(&token);
 
-	if(type != PASSWORD_RESET) {
+	if(uuid == NULL || type != PASSWORD_RESET) {
 		string_free(&password);
 		uuid_free(&uuid);
 		api_endpoint_safe_rollback(request, response);
 		return RESPOND(400, "Invalid token.", INVALID_TOKEN_TYPE);
-	}
-
-	if(auth_update_password(endpoint->conn->connection, uuid, password)) {
-		string_free(&password);
-		uuid_free(&uuid);
-		api_endpoint_safe_rollback(request, response);
-		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_PASSWORD);
 	}
 
 	if(auth_hash_password(password, &password_hashed)) {
@@ -321,6 +314,15 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	}
 
 	string_free(&password);
+
+	if(auth_update_password(endpoint->conn->connection, uuid, password_hashed)) {
+		string_free(&password);
+		uuid_free(&uuid);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_PASSWORD);
+	}
+
+	string_free(&password_hashed);
 	uuid_free(&uuid);
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
