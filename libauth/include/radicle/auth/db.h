@@ -72,10 +72,11 @@ int auth_update_account_password(PGconn* conn, const uuid_t* uuid, const string_
  * @param conn Connection to database.
  * @param owner Owner of token
  * @param token Random token which will be sent via email.
+ * @param custom TOken Specific extra data which needs to be stored
  *
  * @returns Returns 0 on success.
  */
-int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type);
+int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type, const string_t* custom);
 
 /**
  * @brief Saves session to database and returns its row id.
@@ -120,13 +121,14 @@ int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t t
  * @param conn Connection to database.
  * @param token Verification token.
  * @param owner Owner which will be set.
+ * @param custom token specific data field
  *
  * @todo dont return token type but instead add it to where clause in sql
  * statement
  *
  * @return Returns 0 on success. Owner only contains a value if token was valid.
  */
-int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token_type_t* type);
+int auth_verify_token(PGconn* conn, const string_t* token, token_type_t expected_type, uuid_t** owner, string_t** custom);
 
 /**
  * @brief Method to update account verification. Usually used after @ref

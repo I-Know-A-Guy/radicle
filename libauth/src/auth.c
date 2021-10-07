@@ -92,7 +92,7 @@ auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, token_type_t 
 	if(auth_generate_random_base64_url_safe(256, token)) 
 		return AUTH_ERROR;
 
-	if(auth_save_token(conn, owner, *token, type)) {
+	if(auth_save_token(conn, owner, *token, type, NULL)) {
 		string_free(token);
 		return AUTH_ERROR;
 	}
@@ -110,7 +110,6 @@ auth_errors_t auth_sign_in(PGconn* conn, const string_t* email, const string_t* 
 	// There is no account linked to the email
 	// Do a fake hash to mislead email finder? what are they called?
 	if(*account == NULL) {
-		// TODO do a fake verify hash.
 		return AUTH_EMAIL_NOT_FOUND;
 	}
 

@@ -132,8 +132,7 @@ int api_auth_callback_register_verify(const struct _u_request * request, struct 
 
 	string_t* token = string_from_literal(u_map_get(request->map_url, "t"));
 	uuid_t* owner = NULL;
-	token_type_t token_type;
-	if(auth_verify_token(endpoint->conn->connection, token, &owner, &token_type)) {
+	if(auth_verify_token(endpoint->conn->connection, token, REGISTRATION, &owner, NULL)) {
 		string_free(&token);
 		api_endpoint_safe_rollback(request, response);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
@@ -141,7 +140,7 @@ int api_auth_callback_register_verify(const struct _u_request * request, struct 
 
 	string_free(&token);
 
-	if(owner == NULL || token_type != REGISTRATION)  {
+	if(owner == NULL)  {
 		api_endpoint_safe_rollback(request, response);
 		char location_url[instance->verification_reroute_url->length + 16];
 		sprintf(location_url, "%s?verified=false", instance->verification_reroute_url->ptr);
@@ -276,7 +275,6 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 
 	/* Fetched from database */ 
 	uuid_t* uuid = NULL;
-	token_type_t type;
 
 	/* Created after token was validated */
 	string_t* password_hashed = NULL;
@@ -295,7 +293,7 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_BEGIN);
 	}
 
-	if(auth_verify_token(endpoint->conn->connection, token, &uuid, &type)) {
+	if(auth_verify_token(endpoint->conn->connection, token, PASSWORD_RESET, &uuid, NULL)) {
 		string_free(&password);
 		string_free(&token);
 		api_endpoint_safe_rollback(request, response);
@@ -303,7 +301,7 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	}
 	string_free(&token);
 
-	if(uuid == NULL || type != PASSWORD_RESET) {
+	if(uuid == NULL) {
 		string_free(&password);
 		uuid_free(&uuid);
 		api_endpoint_safe_rollback(request, response);

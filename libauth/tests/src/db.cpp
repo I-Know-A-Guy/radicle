@@ -140,30 +140,27 @@ TEST_F(RadicleAuthTests, TestSaveSessionAccessError) {
 TEST_F(RadicleAuthTests, TestSaveTokenSuccess) {
 	install_status_command_ok();
 	install_pg_exec_hook();
-	ASSERT_EQ(auth_save_token(NULL, common_uuid, common_string, REGISTRATION), 0);
+	ASSERT_EQ(auth_save_token(NULL, common_uuid, common_string, REGISTRATION, NULL), 0);
 }
 
 TEST_F(RadicleAuthTests, TestSaveTokenError) {
 	install_status_fatal_error();
 	install_pg_exec_hook();
-	ASSERT_EQ(auth_save_token(NULL, common_uuid, common_string, REGISTRATION), 1);
+	ASSERT_EQ(auth_save_token(NULL, common_uuid, common_string, REGISTRATION, NULL), 1);
 }
 
 PGDB_FAKE_FETCH(FetchVerifyToken) {
-	PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "owner");
 	PGDB_FAKE_UUID(FAKE_UUID);
-	PGDB_FAKE_C_STR(token_type_to_str(REGISTRATION));
 	PGDB_FAKE_FINISH();
 }
 
 TEST_F(RadicleAuthTests, TestVerifyToken) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchVerifyToken));
 	uuid_t* owner = NULL;
-	token_type_t token = NONE;
-	ASSERT_EQ(auth_verify_token(NULL, common_string, &owner, &token), 0);
+	ASSERT_EQ(auth_verify_token(NULL, common_string, REGISTRATION, &owner, NULL), 0);
 	ASSERT_TRUE(owner != NULL);
 	EXPECT_EQ(memcmp(owner->bin, FAKE_UUID, 16), 0);
-	EXPECT_EQ(token, REGISTRATION);
 	uuid_free(&owner);
 }
 
@@ -171,30 +168,24 @@ TEST_F(RadicleAuthTests, TestVerifyTokenError) {
 	install_status_fatal_error();
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchVerifyToken));
 	uuid_t* owner = NULL;
-	token_type_t token = NONE;
-	ASSERT_EQ(auth_verify_token(NULL, common_string, &owner, &token), 1);
+	ASSERT_EQ(auth_verify_token(NULL, common_string, REGISTRATION, &owner, NULL), 1);
 	EXPECT_TRUE(owner == NULL);
-	EXPECT_EQ(token,  NONE);
 }
 
 TEST_F(RadicleAuthTests, TestVerifyTokenEmptyData) {
 	install_status_fatal_error();
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
 	uuid_t* owner = NULL;
-	token_type_t token = NONE;
-	ASSERT_EQ(auth_verify_token(NULL, common_string, &owner, &token), 1);
+	ASSERT_EQ(auth_verify_token(NULL, common_string, REGISTRATION, &owner, NULL), 1);
 	EXPECT_TRUE(owner == NULL);
-	EXPECT_EQ(token,  NONE);
 }
 
 TEST_F(RadicleAuthTests, TestVerifyTokenWrongColumns) {
 	install_status_fatal_error();
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongColumns));
 	uuid_t* owner = NULL;
-	token_type_t token = NONE;
-	ASSERT_EQ(auth_verify_token(NULL, common_string, &owner, &token), 1);
+	ASSERT_EQ(auth_verify_token(NULL, common_string, REGISTRATION, &owner, NULL), 1);
 	EXPECT_TRUE(owner == NULL);
-	EXPECT_EQ(token,  NONE);
 }
 
 TEST_F(RadicleAuthTests, TestUpdateAccountVerificationSuccess) {

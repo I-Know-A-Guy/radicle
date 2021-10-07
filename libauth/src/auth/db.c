@@ -68,12 +68,18 @@ int auth_update_account_password(PGconn* conn, const uuid_t* uuid, const string_
 	return result;
 }
 
-int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type) {
-	const char* stmt = "INSERT INTO Tokens(owner, created, token, type) VALUES($1::uuid, now(), $2::text, $3::TOKEN_TYPE);";
-	pgdb_params_t* params = pgdb_params_new(3);
+int auth_save_token(PGconn* conn, const uuid_t* owner, const string_t* token, token_type_t type, const string_t* custom) {
+	const char* stmt = "INSERT INTO Tokens(owner, created, token, type, custom) VALUES($1::uuid, now(), $2::text, $3::TOKEN_TYPE, $4::text);";
+	pgdb_params_t* params = pgdb_params_new(4);
 	pgdb_bind_uuid(owner, params);
 	pgdb_bind_text(token, params);
 	pgdb_bind_c_str(token_type_to_str(type), params);
+
+	if(custom != NULL)
+		pgdb_bind_text(custom, params);
+	else
+		pgdb_bind_null(params);
+
 
 	int result = pgdb_execute_param(conn, stmt, params);
 	pgdb_params_free(&params);
@@ -141,10 +147,11 @@ int auth_remove_token_by_owner(PGconn* conn, const uuid_t* owner, token_type_t t
 	return result;
 }
 
-int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token_type_t* type) {
-	const char* stmt = "DELETE FROM Tokens WHERE token=$1::text RETURNING owner, type;";
-	pgdb_params_t* params = pgdb_params_new(1);
+int auth_verify_token(PGconn* conn, const string_t* token, token_type_t expected_type, uuid_t** owner, string_t** custom) {
+	const char* stmt = "DELETE FROM Tokens WHERE token=$1::text AND type=$2::TOKEN_TYPE RETURNING owner, custom;";
+	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(token, params);
+	pgdb_bind_c_str(token_type_to_str(expected_type), params);
 
 	pgdb_result_t* result = NULL;
 	if(pgdb_fetch_param(conn, stmt, params, &result)) {
@@ -154,13 +161,14 @@ int auth_verify_token(PGconn* conn, const string_t* token, uuid_t** owner, token
 	}
 
 	if(PQntuples(result->pg) == 1) {
-		if(pgdb_get_uuid(result, 0, "owner", owner) || pgdb_get_enum(result, 0, "type", &token_type_from_str, (int*)type)) {
+		if(pgdb_get_uuid(result, 0, "owner", owner)) {
 			pgdb_params_free(&params);
 			pgdb_result_free(&result);
 			*owner = NULL;
-			*type = -1;
 			return 1;
 		}
+		if(custom != NULL)
+			pgdb_get_text(result, 1, "custom", custom);
 	}
 
 	pgdb_params_free(&params);

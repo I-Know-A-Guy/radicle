@@ -160,7 +160,8 @@ void auth_cookie_free(auth_cookie_t** cookie);
 typedef enum token_type {
 	NONE=0,
 	REGISTRATION, /**< Token is used for verifying registration. */
-	PASSWORD_RESET /**< Token is used for granting password reset rights. */
+	PASSWORD_RESET, /**< Token is used for granting password reset rights. */
+	CHANGE_EMAIL
 } token_type_t;
 
 int token_type_from_str(const char* type);

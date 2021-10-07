@@ -73,6 +73,12 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
  */
 int api_auth_callback_cookie_info(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Sends email to new mail for verification
+ * @todo implement 
+ */
+// int api_auth_callback_send_new_email_verification(const struct _u_request * request, struct _u_response * response, void * user_data);
+
 #if defined(__cplusplus)
 }
 #endif

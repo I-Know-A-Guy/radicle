@@ -159,35 +159,6 @@ TEST_F(APITests, TestAuthCallbackRegisterVerifyTokenNotFound) {
 	EXPECT_EQ(response->status, 307);
 }
 
-PGDB_FAKE_FETCH_STORY(FetchWrongTokenType) {
-	PGDB_FAKE_STORY_BRANCH(FetchWrongTokenType, 0);
-		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
-		PGDB_FAKE_UUID(FAKE_UUID);
-		PGDB_FAKE_C_STR(token_type_to_str(PASSWORD_RESET));
-		PGDB_FAKE_FINISH();
-	PGDB_FAKE_STORY_BRANCH_END();
-
-	PGDB_FAKE_STORY_BRANCH(FetchWrongTokenType, 1);
-		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
-		PGDB_FAKE_INT(100);
-		PGDB_FAKE_FINISH();
-	PGDB_FAKE_STORY_BRANCH_END();
-	return NULL;
-}
-
-TEST_F(APITests, TestAuthCallbackRegisterVerifyWrongTokenFound) {
-
-	PGDB_FAKE_INIT_FETCH_STORY(FetchWrongTokenType);
-	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongTokenType));
-	install_execute_always_success();
-
-	u_map_put(request->map_url, "t", "token");
-
-	ASSERT_EQ(api_auth_callback_register_verify(request, response, instance), U_CALLBACK_COMPLETE);
-
-	EXPECT_EQ(response->status, 307);
-}
-
 PGDB_FAKE_FETCH_STORY(RegisterVerifySuccess) {
 	PGDB_FAKE_STORY_BRANCH(RegisterVerifySuccess, 0);
 		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
@@ -354,29 +325,3 @@ TEST_F(APITests, AuthCallbackResetPasswordTokenNotFound) {
 	EXPECT_EQ(response->status, 400);
 }
 
-PGDB_FAKE_FETCH_STORY(PasswordResetWrongToken) {
-	PGDB_FAKE_STORY_BRANCH(PasswordResetWrongToken, 0);
-		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "type");
-		char fake_uuid[16] = {0x1};
-		PGDB_FAKE_UUID(fake_uuid);
-		PGDB_FAKE_C_STR(token_type_to_str(NONE));
-		PGDB_FAKE_FINISH();
-	PGDB_FAKE_STORY_BRANCH_END();
-
-	API_FAKE_SESSION(PasswordResetWrongToken, 1);
-
-	return NULL;
-}
-
-TEST_F(APITests, AuthCallbackResetPasswordWrongToken) {
-
-	install_execute_always_success();
-	PGDB_FAKE_INIT_FETCH_STORY(PasswordResetWrongToken);
-	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(PasswordResetWrongToken));
-
-	endpoint->json_body = json_pack("{s:s, s:s}", "password", "New Password1!", "token", "token!");
-
-	ASSERT_EQ(api_auth_callback_reset_password(request, response, instance), U_CALLBACK_COMPLETE);
-
-	EXPECT_EQ(response->status, 400);
-}

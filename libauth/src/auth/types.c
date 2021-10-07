@@ -107,6 +107,8 @@ int token_type_from_str(const char* type) {
 		return REGISTRATION;
 	} else if(strcmp(type, "password_reset") == 0) {
 		return PASSWORD_RESET;
+	} else if(strcmp(type, "change_email") == 0) {
+		return CHANGE_EMAIL;
 	}
 	return -1;
 }
@@ -117,6 +119,8 @@ const char* token_type_to_str(token_type_t type) {
 			return "registration";
 		case PASSWORD_RESET:
 			return "password_reset";
+		case CHANGE_EMAIL:
+			return "change_email";
 		default:
 			return "none";
 	}
