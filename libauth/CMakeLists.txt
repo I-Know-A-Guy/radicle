@@ -5,8 +5,6 @@ find_library(argon2 argon2 REQUIRED)
 target_sources(
 	radicle
 	PRIVATE
-		include/radicle/auth/setup.h
-		src/auth/setup.c
 		include/radicle/auth/crypto.h
 		src/auth/crypto.c
 		include/radicle/auth/types.h

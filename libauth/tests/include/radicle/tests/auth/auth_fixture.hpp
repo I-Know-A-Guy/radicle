@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "radicle/pgdb.h"
-#include "radicle/auth/setup.h"
 #include "radicle/auth/types.h"
 #include "radicle/auth/crypto.h"
 #include "radicle/auth/db.h"
