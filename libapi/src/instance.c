@@ -165,6 +165,11 @@ int api_sendgrid_instance_load(json_t* object, const char* key, sendgrid_instanc
 		return 1;
 	}
 
+	if(api_config_get_string(data, "change_email_template", &(*sendgrid)->email_change_template)) {
+		sendgrid_instance_free(sendgrid);
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -300,6 +305,12 @@ int api_instance_load_from_file(const char* file, api_instance_t** config) {
 	}
 
 	if(api_config_get_string(data, "no_associated_account_url", &(*config)->no_associated_account_url)) {
+		json_decref(data);
+		api_instance_free(config);
+		return 1;
+	}
+
+	if(api_config_get_string(data, "change_email_url", &(*config)->change_email_url)) {
 		json_decref(data);
 		api_instance_free(config);
 		return 1;

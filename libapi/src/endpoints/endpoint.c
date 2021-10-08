@@ -157,7 +157,7 @@ int api_endpoint_manage_session(struct _u_response * response, api_instance_t* i
 			return 0;
 		} else if(endpoint->authenticated && auth_make_owned_session(endpoint->conn->connection, endpoint->account->uuid, instance->signature_key, &cookie, &endpoint->session)) {
 			ERROR("Unable to create owned session.\n");
-			return 1;
+			return 0;
 		}
 
 		ulfius_add_same_site_cookie_to_response(response, "session-id", cookie->cookie->ptr,

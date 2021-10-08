@@ -121,7 +121,7 @@ auth_errors_t auth_update_password(PGconn* conn, const uuid_t* uuid, const strin
  *
  * @return Returns either \ref auth_errors_t.AUTH_OK or auth_errors_t.AUTH_ERROR
  */
-auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, token_type_t type, string_t** token);
+auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, const token_type_t type, const string_t* custom, string_t** token);
 
 /**
  * @brief Tries to sign in using the given email and password combination. 

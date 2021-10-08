@@ -56,6 +56,19 @@ int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid
 	return 0;
 }
 
+int auth_update_account_email(PGconn* conn, const uuid_t* uuid, const string_t* email) {
+	const char* stmt = "UPDATE Accounts SET email=$1::text, verified=true WHERE uuid=$2::uuid;";
+
+	pgdb_params_t* params = pgdb_params_new(2);
+	pgdb_bind_text(email, params);
+	pgdb_bind_uuid(uuid, params);
+
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
+
+}
+
 int auth_update_account_password(PGconn* conn, const uuid_t* uuid, const string_t* password) {
 	const char* stmt = "UPDATE Accounts SET password=$1::text WHERE uuid=$2::uuid;";
 
@@ -168,7 +181,7 @@ int auth_verify_token(PGconn* conn, const string_t* token, token_type_t expected
 			return 1;
 		}
 		if(custom != NULL)
-			pgdb_get_text(result, 1, "custom", custom);
+			pgdb_get_text(result, 0, "custom", custom);
 	}
 
 	pgdb_params_free(&params);

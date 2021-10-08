@@ -72,6 +72,8 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Failed to update password.";
 		case VALIDATION_EMAIL_NOT_VERIFIED:
 			return "Email not yet verified.";
+		case ERROR_UPDATING_ACCOUNT_EMAIL:
+			return "Failed to update mail.";
 		default:
 			return "missing error message.";
 	}

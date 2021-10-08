@@ -56,6 +56,17 @@ extern "C" {
 int auth_save_account(PGconn* conn, const auth_account_t* account, uuid_t** uuid);
 
 /**
+ * @brief Updates email of account.
+ *
+ * @param conn Connection to database.
+ * @param uuid UUID of account which will be updated.
+ * @param email New email.
+ *
+ * @return Returns 0 on success
+ */
+int auth_update_account_email(PGconn* conn, const uuid_t* uuid, const string_t* email);
+
+/**
  * @brief Updates password of account. Must already be hashed.
  *
  * @param conn Connection to database.

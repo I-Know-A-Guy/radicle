@@ -49,6 +49,7 @@ typedef struct sendgrid_instance {
 	string_t* duplicate_mail_tempate; /**< Template which is used, if someone is trying to register with an already registered email. */
 	string_t* password_reset_template; /**< Template which contains a password reset link. */
 	string_t* no_associated_account_template; /**< Mail which is only sent, if someone tries to reset their password for an account, which doesnt exist. */
+	string_t* email_change_template; /**< Email which will need to be confirmed for email change */
 } sendgrid_instance_t;
 
 /**
@@ -113,6 +114,20 @@ int send_reset_password_mail(const sendgrid_instance_t* sg, const string_t* rece
  * @return returns 0 on success.
  */
 int send_mail_not_associated(const sendgrid_instance_t* sg, const string_t* receiver, const string_t* url);
+
+/**
+ * @brief Email which contains a token which will need to be verified if someone
+ * tries to change their email
+ *
+ * @param sg SendGrid instance containing apiKey and sender mail.
+ * @param receiver Mail which will receive text
+ * @param url  URL which needs to be confirmed if someone tries to change their
+ * email.
+ *
+ * @return returns 0 on success.
+ */
+int send_change_email_verification(const sendgrid_instance_t* sg, const string_t* receiver, const string_t* url, const string_t* token);
+
 
 #if defined(__cplusplus)
 }

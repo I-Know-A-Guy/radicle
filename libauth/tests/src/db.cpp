@@ -77,6 +77,17 @@ TEST_F(RadicleAuthTests, TestSaveAccountWrongColumnds) {
 	ASSERT_TRUE(uuid == NULL);
 }
 
+TEST_F(RadicleAuthTests, TestUpdateAccountEmailSuccess) {
+	install_execute_always_success();
+	ASSERT_EQ(auth_update_account_email(NULL, common_uuid, common_string), 0);
+}
+
+TEST_F(RadicleAuthTests, TestUpdateAccountEmailError) {
+	install_pg_exec_hook();
+	install_status_fatal_error();
+	ASSERT_EQ(auth_update_account_email(NULL, common_uuid, common_string), 1);
+}
+
 TEST_F(RadicleAuthTests, TestUpdateAccountPasswordSuccess) {
 	install_execute_always_success();
 	ASSERT_EQ(auth_update_account_password(NULL, common_uuid, common_string), 0);

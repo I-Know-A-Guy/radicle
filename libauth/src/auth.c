@@ -88,11 +88,11 @@ auth_errors_t auth_update_password(PGconn* conn, const uuid_t* uuid, const strin
 	return AUTH_OK;
 }
 
-auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, token_type_t type, string_t** token) {
+auth_errors_t auth_create_token(PGconn* conn, const uuid_t* owner, const token_type_t type, const string_t* custom, string_t** token) {
 	if(auth_generate_random_base64_url_safe(256, token)) 
 		return AUTH_ERROR;
 
-	if(auth_save_token(conn, owner, *token, type, NULL)) {
+	if(auth_save_token(conn, owner, *token, type, custom)) {
 		string_free(token);
 		return AUTH_ERROR;
 	}

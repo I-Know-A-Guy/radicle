@@ -110,3 +110,14 @@ int send_mail_not_associated(const sendgrid_instance_t* sg, const string_t* rece
 	json_object_set(values, "url", json_string(url->ptr));
 	return send_mail(sg, sg->no_associated_account_template, values, receiver);
 }
+
+int send_change_email_verification(const sendgrid_instance_t* sg, const string_t* receiver, const string_t* url, const string_t* token) {
+	const int max_url_length = url->length + token->length + 4;
+	char reset_url[max_url_length];
+	snprintf(reset_url, max_url_length, "%s?t=%s", url->ptr, token->ptr);
+	json_t* values = json_object();
+	json_object_set(values, "url", json_string(reset_url));
+	json_object_set(values, "name", json_stringn(receiver->ptr, receiver->length));
+	int result = send_mail(sg, sg->email_change_template, values, receiver);
+	return result;
+}

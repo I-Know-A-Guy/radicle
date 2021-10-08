@@ -325,3 +325,79 @@ TEST_F(APITests, AuthCallbackResetPasswordTokenNotFound) {
 	EXPECT_EQ(response->status, 400);
 }
 
+int send_change_email_verification_fake(const sendgrid_instance_t* sg, const string_t* receiver, const string_t* url, const string_t* token) {
+	return 0;
+}
+
+TEST_F(APITests, AuthCallbackSendNewEmailVerificationSuccess) {
+
+	install_execute_always_success();
+	install_hook(subhook_new((void*)send_change_email_verification, (void*)send_change_email_verification_fake, SUBHOOK_64BIT_OFFSET));
+
+	endpoint->json_body = json_pack("{s:s}", "email", "test@mail.com");
+	authenticate_endpoint();
+
+	ASSERT_EQ(api_auth_callback_send_new_email_verification(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 200);
+}
+
+TEST_F(APITests, AuthCallbackSendNewEmailVerificationNoData) {
+
+	install_execute_always_success();
+
+	endpoint->json_body = json_pack("{s:s}", "email", "");
+	authenticate_endpoint();
+
+	ASSERT_EQ(api_auth_callback_send_new_email_verification(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 422);
+}
+
+PGDB_FAKE_FETCH_STORY(VerifyNewEmail) {
+	PGDB_FAKE_STORY_BRANCH(VerifyNewEmail, 0);
+		PGDB_FAKE_RESULT_2(PGRES_TUPLES_OK, "owner", "custom");
+		PGDB_FAKE_UUID(FAKE_UUID);
+		PGDB_FAKE_C_STR("new@mail.com");
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	API_FAKE_SESSION(VerifyNewEmail, 1);
+
+	return NULL;
+}
+
+TEST_F(APITests, AuthCallbackVerifyNewEmailSuccess) {
+	install_execute_always_success();
+	PGDB_FAKE_INIT_FETCH_STORY(VerifyNewEmail);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(VerifyNewEmail));
+
+	u_map_put(request->map_url, "t", "TOKEN");
+
+	ASSERT_EQ(api_auth_callback_verify_new_email(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 200);
+}
+
+TEST_F(APITests, AuthCallbackVerifyNewEmailInvalidToken) {
+	install_execute_always_success();
+
+	u_map_put(request->map_url, "t", NULL);
+
+	ASSERT_EQ(api_auth_callback_verify_new_email(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 400);
+}
+
+API_EMPTY_RESULT(NewEmailEmpty);
+
+TEST_F(APITests, AuthCallbackVerifyNewEmailTokenNotFound) {
+	install_execute_always_success();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(NewEmailEmpty));
+
+	u_map_put(request->map_url, "t", "TOKEN");
+
+	ASSERT_EQ(api_auth_callback_verify_new_email(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 400);
+}

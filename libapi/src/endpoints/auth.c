@@ -61,7 +61,7 @@ int api_auth_callback_register(const struct _u_request * request, struct _u_resp
 	}
 
 	string_t* registration_token = NULL;
-	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, &registration_token)) {
+	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, NULL, &registration_token)) {
 		api_endpoint_safe_rollback(request, response);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
@@ -96,7 +96,7 @@ int api_auth_callback_resend_verification_mail(const struct _u_request * request
 	}
 
 	string_t* registration_token = NULL;
-	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, &registration_token)) {
+	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, NULL, &registration_token)) {
 		api_endpoint_safe_rollback(request, response);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
@@ -242,7 +242,7 @@ int api_auth_callback_send_password_reset(const struct _u_request * request, str
 	}
 
 	string_t* token = NULL;
-	if(auth_create_token(endpoint->conn->connection, account->uuid, PASSWORD_RESET, &token)) {
+	if(auth_create_token(endpoint->conn->connection, account->uuid, PASSWORD_RESET, NULL, &token)) {
 		auth_account_free(&account);
 		api_endpoint_safe_rollback(request, response);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
@@ -343,4 +343,92 @@ int api_auth_callback_cookie_info(const struct _u_request * request, struct _u_r
 	json_object_set(body, "email", json_stringn(endpoint->account->email->ptr, endpoint->account->email->length));
 	json_object_set(body, "verified", json_boolean(endpoint->account->verified));
 	return RESPOND_JSON(200, body, SUCCESS);
+}
+
+
+int api_auth_callback_send_new_email_verification(const struct _u_request * request, struct _u_response * response, void * user_data) {
+	api_instance_t* instance = user_data;
+	api_endpoint_t* endpoint = response->shared_data;
+
+	string_t* email = NULL;
+	if(api_json_validate_email(endpoint->json_body, "email", &email))
+		return RESPOND(422, "Missing valid email.", VALIDATION_INVALID_EMAIL);
+
+	if(pgdb_transaction_begin(endpoint->conn->connection)) {
+		string_free(&email);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_BEGIN);
+	}
+
+	string_t* token = NULL;
+	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, CHANGE_EMAIL, email, &token)) {
+		string_free(&email);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
+	}
+
+
+	if(send_change_email_verification(instance->sendgrid, email, instance->change_email_url, token)) {
+		string_free(&email);
+		string_free(&token);
+
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
+
+	}
+
+	string_free(&email);
+	string_free(&token);
+	if(pgdb_transaction_commit(endpoint->conn->connection)) {
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
+	}
+
+	return RESPOND(200, DEFAULT_200_MSG, SUCCESS);
+}
+
+int api_auth_callback_verify_new_email(const struct _u_request * request, struct _u_response * response, void * user_data) {
+
+	api_instance_t* instance = user_data;
+	api_endpoint_t* endpoint = response->shared_data;
+
+	if(!u_map_has_key(request->map_url, "t") || u_map_get_length(request->map_url, "t") <= 1) 
+		return RESPOND(400, "Missing parameter for token.", VALIDATION_MISSING_PARAMETER);
+	
+	string_t* token = string_from_literal(u_map_get(request->map_url, "t"));
+
+	if(pgdb_transaction_begin(endpoint->conn->connection)) {
+		string_free(&token);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_BEGIN);
+	}
+
+	uuid_t* owner = NULL;
+	string_t* new_email = NULL;
+	if(auth_verify_token(endpoint->conn->connection, token, CHANGE_EMAIL, &owner, &new_email)) {
+		string_free(&token);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
+	}
+
+	string_free(&token);
+
+	if(owner == NULL) {
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(400, "Invalid token.", INVALID_TOKEN_TYPE);
+	}
+
+	if(auth_update_account_email(endpoint->conn->connection, owner, new_email)) {
+		uuid_free(&owner);
+		string_free(&new_email);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_ACCOUNT_EMAIL);
+	}
+
+	uuid_free(&owner);
+	string_free(&new_email);
+	if(pgdb_transaction_commit(endpoint->conn->connection)) {
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
+	}
+
+	return RESPOND(200, DEFAULT_200_MSG, SUCCESS);
 }

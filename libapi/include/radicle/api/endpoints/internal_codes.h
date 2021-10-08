@@ -76,6 +76,7 @@ typedef enum internal_errors {
 	FAILED_TO_SEND_MAIL,
 	PASSWORD_RESET_EMAIL_DOESNT_EXIST,
 	ERROR_UPDATING_PASSWORD,
+	ERROR_UPDATING_ACCOUNT_EMAIL
 } internal_errors_t;
 
 const char* internal_errors_msg(internal_errors_t code);
