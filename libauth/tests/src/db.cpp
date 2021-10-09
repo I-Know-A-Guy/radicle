@@ -330,3 +330,61 @@ TEST_F(RadicleAuthTests, TestGetSessionAccountByCookieWrongColumns) {
 	ASSERT_TRUE(account == NULL);
 	ASSERT_EQ(session_id, 0);
 }
+
+PGDB_FAKE_FETCH(SaveBlacklist) {
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
+	PGDB_FAKE_INT(123);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestSaveBlacklistSuccess) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(SaveBlacklist));
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_ip(NULL, common_string, time(NULL), time(NULL), &id), 0);
+}
+
+TEST_F(RadicleAuthTests, TestSaveBlacklistFailure) {
+	install_status_fatal_error();
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_ip(NULL, common_string, time(NULL), time(NULL), &id), 1);
+}
+
+TEST_F(RadicleAuthTests, TestSaveBlacklistEmptyData) {
+	install_status_fatal_error();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_ip(NULL, common_string, time(NULL), time(NULL), &id), 1);
+}
+
+TEST_F(RadicleAuthTests, TestSaveBlacklistWrongColumn) {
+	install_status_fatal_error();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongColumns));
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_ip(NULL, common_string, time(NULL), time(NULL), &id), 1);
+}
+
+PGDB_FAKE_FETCH(BlacklistLookup) {
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "anonymous");
+	PGDB_FAKE_INT(1);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestLookupBlackListSuccess) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(BlacklistLookup));
+	bool blacklisted = false;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 0);
+	EXPECT_TRUE(blacklisted);
+}
+
+TEST_F(RadicleAuthTests, TestLookupBlackListSuccess2) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
+	bool blacklisted = false;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 0);
+	EXPECT_FALSE(blacklisted);
+}
+
+TEST_F(RadicleAuthTests, TestLookupBlackListFailure) {
+	install_status_fatal_error();
+	bool blacklisted = false;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 1);
+}

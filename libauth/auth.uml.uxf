@@ -1,4 +1,4 @@
-<diagram program="umletino" version="14.3.0"><zoom_level>10</zoom_level><element><id>UMLClass</id><coordinates><x>470</x><y>270</y><w>470</w><h>160</h></coordinates><panel_attributes>Accounts
+<diagram program="umletino" version="14.3.0"><zoom_level>10</zoom_level><element><id>UMLClass</id><coordinates><x>360</x><y>230</y><w>470</w><h>160</h></coordinates><panel_attributes>Accounts
 -
 &lt;&lt;pk&gt;&gt; uuid: UUID NOT NULL
 -
@@ -7,7 +7,7 @@ password: TEXT NOT NULL
 role: ENUM (admin, user) DEFAULT user
 verified: BOOL DEFAULT FALSE
 created: TIMESTAMP NOT NULL
-active: BOOL DEFAULT TRUE</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>790</x><y>510</y><w>470</w><h>120</h></coordinates><panel_attributes>Sessions
+active: BOOL DEFAULT TRUE</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>680</x><y>470</y><w>470</w><h>120</h></coordinates><panel_attributes>Sessions
 -
 &lt;&lt;pk&gt;&gt; id: SERIAL
 &lt;&lt;fk&gt;&gt; owner: UUID
@@ -16,18 +16,19 @@ token: TEXT NOT NULL
 created: TIMESTAMP NOT NULL
 expires: TIMESTAMP NOT NULL
 revoked: BOOL DEFAULT TRUE
-salt: TEXT NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>850</x><y>420</y><w>210</w><h>110</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;
+salt: TEXT NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>740</x><y>380</y><w>210</w><h>110</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;
 m1=0..n
-m2=0..1</panel_attributes><additional_attributes>170;90;170;60;10;60;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>260</x><y>510</y><w>430</w><h>120</h></coordinates><panel_attributes>Tokens
+m2=0..1</panel_attributes><additional_attributes>170;90;170;60;10;60;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>150</x><y>470</y><w>430</w><h>130</h></coordinates><panel_attributes>Tokens
 -
 &lt;&lt;pk&gt;&gt; id: SERIAL
 &lt;&lt;fk&gt;&gt; owner: UUID NOT NULL
 -
 created: TIMESTAMP NOT NULL
 token: TEXT NOT NULL
-type: ENUM(Registration, PasswordReset, EmailChange) NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>420</x><y>420</y><w>140</w><h>110</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+type: ENUM(Registration, PasswordReset, EmailChange) NOT NULL
+custom TEXT NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>310</x><y>380</y><w>140</w><h>110</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
 m1=0..1
-m2=1</panel_attributes><additional_attributes>10;90;10;40;110;40;110;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>860</x><y>720</y><w>320</w><h>170</h></coordinates><panel_attributes>SessionAccesses
+m2=1</panel_attributes><additional_attributes>10;90;10;40;110;40;110;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>750</x><y>680</y><w>320</w><h>170</h></coordinates><panel_attributes>SessionAccesses
 -
 &lt;&lt;pk&gt;&gt; id: SERIAL
 &lt;&lt;fk&gt;&gt; session_id: int NOT NULL
@@ -38,21 +39,22 @@ date: TIMESTAMP NOT NULL
 url: TEXT NOT NULL
 response_time: INT NOT NULL
 response_code: INT NOT NULL
-internal_status: INT NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1010</x><y>620</y><w>50</w><h>120</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+internal_status: INT NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>900</x><y>580</y><w>50</w><h>120</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
 m1= 1
-m2=1..*</panel_attributes><additional_attributes>10;10;10;100</additional_attributes></element><element><id>UMLClass</id><coordinates><x>950</x><y>100</y><w>300</w><h>100</h></coordinates><panel_attributes>Blacklist
+m2=1..*</panel_attributes><additional_attributes>10;10;10;100</additional_attributes></element><element><id>UMLClass</id><coordinates><x>840</x><y>60</y><w>300</w><h>100</h></coordinates><panel_attributes>Blacklist
 -
 &lt;&lt;pk&gt;&gt; id SERIAL
 -
-ip INET NOT NULL
-added DATE NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>600</x><y>100</y><w>270</w><h>100</h></coordinates><panel_attributes>BlacklistAccesses
+ip TEXT NOT NULL
+added DATE NOT NULL
+ban_lift DATE</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>490</x><y>60</y><w>270</w><h>100</h></coordinates><panel_attributes>BlacklistAccesses
 -
 &lt;&lt;pk&gt;&gt; id SERIAL
 &lt;&lt;fk&gt;&gt; blacklist_id int NOT NULL
 &lt;&lt;fk&gt;&gt; account UUID
 -
-date TIMESTAMP NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>860</x><y>100</y><w>110</w><h>40</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+date TIMESTAMP NOT NULL</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>750</x><y>60</y><w>110</w><h>40</h></coordinates><panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
 m1=0..*
-m2=1</panel_attributes><additional_attributes>10;10;90;10</additional_attributes></element><element><id>Relation</id><coordinates><x>700</x><y>190</y><w>50</w><h>100</h></coordinates><panel_attributes>lt=-
+m2=1</panel_attributes><additional_attributes>10;10;90;10</additional_attributes></element><element><id>Relation</id><coordinates><x>590</x><y>150</y><w>50</w><h>100</h></coordinates><panel_attributes>lt=-
 m1=0..1
 m2=1</panel_attributes><additional_attributes>10;80;10;10</additional_attributes></element></diagram>

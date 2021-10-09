@@ -177,6 +177,32 @@ int auth_get_account_by_email(PGconn* conn, const string_t* email, auth_account_
  */
 int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* id, string_t** salt, auth_account_t** account);
 
+/**
+ * @brief Saves ip to blacklist and retrieves id.
+ *
+ * @param conn Connection to database.
+ * @param ip Ip of offender
+ * @param date Date on which ip was banned
+ * @param ban_lift If offense wasnt grave, ban can be lifted on *date*, if 0, it
+ * will not be added to query
+ *
+ * @return Returns 0 on success
+ */
+int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const time_t ban_lift, uint32_t* id);
+
+/**
+ * @brief Lookups if given ip is currently  blacklisted
+ *
+ * @param conn Connection to database
+ * @param ip Ip to lookup
+ * @param blacklsited Result of query. If true, ip is currently blacklisted
+ *
+ * @return Returns 0 on success
+ */
+int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted);
+
+/** @todo Lookups for session access count */
+
 #if defined(__cplusplus)
 }
 #endif

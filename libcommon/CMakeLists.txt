@@ -5,6 +5,8 @@ target_sources(
 		src/types/uuid.c
 		include/radicle/types/string.h	
 		src/types/string.c
+		include/radicle/types/linked_list.h
+		src/types/linked_list.c
 		include/radicle/print.h
 )
 
@@ -23,6 +25,7 @@ if(BUILD_TESTING)
 			tests/include/radicle/tests/radicle_fixture.hpp
 			tests/src/types/uuid.cpp
 			tests/src/types/string.cpp
+			tests/src/types/linked_list.cpp
 	)
 
 	target_include_directories(

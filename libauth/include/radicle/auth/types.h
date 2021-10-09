@@ -167,6 +167,16 @@ typedef enum token_type {
 int token_type_from_str(const char* type);
 const char* token_type_to_str(token_type_t type);
 
+/*
+ * @todo implement
+typedef struct auth_blacklist_entry {
+	uint32_t id;
+	string_t* ip;
+	time_t added;
+	time_t ban_lift;
+} auth_blacklist_entry_t;
+*/
+
 #if defined(__cplusplus)
 }
 #endif

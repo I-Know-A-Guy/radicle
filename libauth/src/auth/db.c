@@ -284,3 +284,52 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* i
 
 	return 0;
 }
+
+int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const time_t ban_lift, uint32_t* id) {
+	const char* stmt = "INSERT INTO Blacklist(ip, added, ban_lift) VALUES ($1::text, $2::timestamp, $3::timestamp) RETURNING id;";
+	pgdb_params_t* params = pgdb_params_new(3);
+	pgdb_bind_text(ip, params);
+	pgdb_bind_timestamp(date, params);
+	if(ban_lift != 0)
+		pgdb_bind_timestamp(ban_lift, params);
+	else 
+		pgdb_bind_null(params);
+
+	pgdb_result_t* result = NULL;
+	if(pgdb_fetch_param(conn, stmt, params, &result)) {
+		pgdb_params_free(&params);
+		*id = 0;
+		return 1;
+	}
+	pgdb_params_free(&params);
+
+	if(pgdb_get_uint32(result, 0, "id", id)) {
+		pgdb_result_free(&result);
+		*id = 0;
+		return 1;
+	}
+	pgdb_result_free(&result);
+	return 0;
+}
+
+int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted) {
+	const char* stmt = "SELECT 1 FROM Blacklist WHERE ip=$1::text AND (ban_lift = NULL OR ban_lift < $2::timestamp) LIMIT 1;";
+
+	pgdb_params_t* params = pgdb_params_new(2);
+	pgdb_bind_text(ip, params);
+	pgdb_bind_timestamp(time(NULL), params);
+
+	pgdb_result_t* result = NULL;
+	if(pgdb_fetch_param(conn, stmt, params, &result)) {
+		pgdb_params_free(&params);
+		return 1;
+	}
+
+	*blacklisted = PQntuples(result->pg) == 1;
+
+	pgdb_params_free(&params);
+	pgdb_result_free(&result);
+
+	return 0;
+}
+
