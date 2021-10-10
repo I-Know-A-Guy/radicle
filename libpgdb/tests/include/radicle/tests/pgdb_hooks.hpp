@@ -54,6 +54,7 @@
 
 #define PGDB_FAKE_RESULTS(status, n)\
 	PGresult* result = PQmakeEmptyPGresult(NULL, status);\
+	int row = 0;\
 	int column = -1;\
 	PGresAttDesc descs[n];\
 	if(set_fake_columns_attributes(result, descs, n, columns)) {\
@@ -61,6 +62,10 @@
 		ERROR("Failed to set columns.\n");\
 		return NULL;\
 	}\
+
+#define PGDB_FAKE_NEXT_ROW()\
+       	row++;\
+       	column = -1;
 
 #define PGDB_FAKE_EMPTY_RESULT(status) return PQmakeEmptyPGresult(NULL, status);
 
@@ -99,7 +104,7 @@
 #define PGDB_FAKE_FINISH() return result;
 
 #define PGDB_FAKE_VALUE(func, val)\
-	if(func(result, 0, ++column, val)) {\
+	if(func(result, row, ++column, val)) {\
 		ERROR("Failed to set fake value.\n");\
 	}
 

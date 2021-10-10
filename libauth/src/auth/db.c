@@ -333,3 +333,43 @@ int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted
 	return 0;
 }
 
+int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin, list_t** results) {
+	const char* stmt = "Select Sessions.owner, SessionAccesses.internal_status, SessionAccesses.response_code FROM SessionAccesses "
+				"JOIN Sessions ON SessionAccesses.session_id=Sessions.id "
+				"WHERE SessionsAccesses.requester_ip=$1::text AND SessionsAccesses.date > $2::timestamp;";
+
+	pgdb_params_t* params = pgdb_params_new(2);
+	pgdb_bind_text(ip, params);
+	pgdb_bind_timestamp(begin, params);
+
+	pgdb_result_t* result = NULL;
+	if(pgdb_fetch_param(conn, stmt, params, &result)) {
+		pgdb_params_free(&params);
+		return 1;
+	}
+	pgdb_params_free(&params);
+
+	int rows = PQntuples(result->pg);
+
+	if(rows == 0) {
+		pgdb_result_free(&result);
+		*results = NULL;
+		return 1;
+	}
+
+	for(int i = 0; i < rows; i++) {
+		auth_session_access_entry_t* entry = (auth_session_access_entry_t*)calloc(1, sizeof(auth_session_access_entry_t));
+		if(pgdb_get_uint32(result, i, "internal_status", &entry->internal_status) ||
+		   pgdb_get_uint32(result, i, "response_code", &entry->response_code)) {
+
+			pgdb_result_free(&result);
+			list_free(*results, auth_session_access_entry_free);
+			return 1;
+		}
+		pgdb_get_uuid(result, i, "owner", &entry->owner);
+		list_tail(results, entry);
+	}
+		
+	pgdb_result_free(&result);
+	return 0;
+}

@@ -125,3 +125,10 @@ const char* token_type_to_str(token_type_t type) {
 			return "none";
 	}
 }
+
+void auth_session_access_entry_free(void* ptr) {
+	if(ptr == NULL) return;
+	auth_session_access_entry_t* entry = (auth_session_access_entry_t*)ptr;
+	uuid_free(&entry->owner);
+	free(ptr);
+}

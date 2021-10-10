@@ -21,6 +21,8 @@ list_t* list_tail(list_t** root, void* data) {
 
 void list_free(list_t* root, void(*free_data)(void*)) {
 
+	if(root == NULL) return;
+
 	list_t* iter = root->tail;
 
 	while(iter != NULL) {

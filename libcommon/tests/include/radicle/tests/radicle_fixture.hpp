@@ -24,14 +24,19 @@
 
 #include "radicle/types/string.h"
 #include "radicle/types/uuid.h"
+#include "radicle/types/linked_list.h"
+
 
 /**
  * @brief Provies common_uuid, common_string and manages strings, uuids and hook.
  */
 class RadicleTests: public ::testing::Test {
 
+	typedef std::pair<list*, void (*)(void*)> list_pair;
+
 	std::vector<string_t*> strings; /**< Will be freed on TearDown */
 	std::vector<uuid_t*> uuids; /**< Will be freed on TearDown */
+	std::vector<list_pair> lists; /**< Will be freed on TearDown */
 	std::vector<subhook_t> hooks; /**< Will be freed on TearDown */
 
 	protected:
@@ -60,6 +65,10 @@ class RadicleTests: public ::testing::Test {
 			uuid_free(iter.base());
 		}
 
+		for(std::vector<list_pair>::iterator iter = lists.begin(); iter != lists.end(); iter++) {
+			list_free(iter->first, iter->second);
+		}
+
 		for(std::vector<subhook_t>::iterator iter = hooks.begin(); iter != hooks.end(); iter++) {
 			subhook_remove(*iter.base());
 			subhook_free(*iter.base());
@@ -75,6 +84,10 @@ class RadicleTests: public ::testing::Test {
 		string_t* buf = string_from_literal(literal);
 		strings.push_back(buf);
 		return buf;
+	}
+
+	void take_list(list_t* list, void(*free_func)(void*)) {
+		lists.push_back({list, free_func});
 	}
 
 	/**

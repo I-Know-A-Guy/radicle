@@ -23,13 +23,13 @@
 #include "radicle/types/uuid.h"
 
 uuid_t* uuid_new(const unsigned char* bin) {
-
 	uuid_t* buf = calloc(1, sizeof(uuid_t));
 	memcpy(buf->bin, bin, 16);
 	return buf;
 }
 
 void uuid_free(uuid_t** uuid) {
+	if(*uuid == NULL) return;
 	free(*uuid);
 	*uuid = NULL;
 }

@@ -167,6 +167,14 @@ typedef enum token_type {
 int token_type_from_str(const char* type);
 const char* token_type_to_str(token_type_t type);
 
+typedef struct auth_session_access_entry {
+	uuid_t* owner;
+	uint32_t internal_status;
+	uint32_t response_code;
+} auth_session_access_entry_t;
+
+void auth_session_access_entry_free(void* ptr);
+
 /*
  * @todo implement
 typedef struct auth_blacklist_entry {

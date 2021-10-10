@@ -33,6 +33,7 @@
 
 #include "radicle/types/string.h"
 #include "radicle/types/uuid.h"
+#include "radicle/types/linked_list.h"
 #include "radicle/auth/types.h"
 
 #if defined(__cplusplus)
@@ -201,7 +202,19 @@ int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const
  */
 int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted);
 
-/** @todo Lookups for session access count */
+/**
+ * @brief Retrieves all session accesses by ip. Make sure to use a small begin,
+ * otherwise the api will crash, if for every request it first retrieves and
+ * checks a huge amount of request data.
+ *
+ * @param conn Connection to database
+ * @param ip Ip to lookup
+ * @param begin Only retrieve results newer than begin
+ * @param results Linked list of all Session accesses
+ *
+ * @return Return 0 on success
+ */
+int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin, list_t** results);
 
 #if defined(__cplusplus)
 }

@@ -388,3 +388,43 @@ TEST_F(RadicleAuthTests, TestLookupBlackListFailure) {
 	bool blacklisted = false;
 	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 1);
 }
+
+PGDB_FAKE_FETCH(SessionAccessLookup) {
+	PGDB_FAKE_RESULT_3(PGRES_TUPLES_OK, "internal_status", "response_code", "owner");
+
+	PGDB_FAKE_INT(100);
+	PGDB_FAKE_INT(200);
+	PGDB_FAKE_UUID(FAKE_UUID);
+
+	PGDB_FAKE_NEXT_ROW();
+
+	PGDB_FAKE_INT(300);
+	PGDB_FAKE_INT(500);
+	PGDB_FAKE_UUID(FAKE_UUID);
+
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestLookupSessionAccessesSuccess) {
+
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(SessionAccessLookup));
+	
+	list_t* result = NULL;
+
+	ASSERT_EQ(auth_session_lookup_ip(NULL, common_string, time(NULL), &result), 0);
+	ASSERT_TRUE(result != NULL);
+
+	take_list(result, &auth_session_access_entry_free);
+
+	auth_session_access_entry_t* first = (auth_session_access_entry_t*)result->data;
+	EXPECT_EQ(first->internal_status,  100);
+	EXPECT_EQ(first->response_code,  200);
+	EXPECT_EQ(memcmp(first->owner->bin, FAKE_UUID, 16), 0);
+
+	ASSERT_TRUE(result->next != NULL);
+	auth_session_access_entry_t* second = (auth_session_access_entry_t*)result->next->data;
+	EXPECT_EQ(second->internal_status,  300);
+	EXPECT_EQ(second->response_code,  500);
+	EXPECT_EQ(memcmp(second->owner->bin, FAKE_UUID, 16), 0);
+}
+
