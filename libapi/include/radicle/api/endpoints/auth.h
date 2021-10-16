@@ -36,6 +36,7 @@
 extern "C" {
 #endif
 
+
 /**
  * @brief Registers user to database.
  */

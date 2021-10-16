@@ -208,15 +208,15 @@ int hmac_verify_salted_fake(const string_t* key, const string_t* salt, const str
 }
 
 TEST_F(APITests, TestEndpointCheckForSessionAccountDeactivated) {
+
+	PGDB_FAKE_INIT_FETCH_STORY(FetchSessionIdWrongSalt);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchSessionIdWrongSalt));
+	install_hook(subhook_new((void*)hmac_verify_salted, (void*)hmac_verify_salted_fake, SUBHOOK_64BIT_OFFSET));
+
 	api_instance_t* instance = manage_instance();
 	_u_request* request = manage_request();
 	_u_response* response = manage_response();
 	api_endpoint_t* endpoint = create_endpoint(response);
-
-	PGDB_FAKE_INIT_FETCH_STORY(FetchSessionIdWrongSalt);
-	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchSessionIdWrongSalt));
-
-	install_hook(subhook_new((void*)hmac_verify_salted, (void*)hmac_verify_salted_fake, SUBHOOK_64BIT_OFFSET));
 
 	u_map_put(request->map_cookie, "session-id", FAKE_COOKIE_STRING);
 	ASSERT_EQ(api_callback_endpoint_check_for_session(request, response, instance), U_CALLBACK_COMPLETE);
@@ -285,4 +285,55 @@ TEST_F(APITests, TestEndointCheckForVerifiedEmailSuccess) {
 
 	api_endpoint_free(endpoint);
 }
+
+PGDB_FAKE_FETCH_STORY(BlacklistFetch) {
+
+	PGDB_FAKE_STORY_BRANCH(BlacklistFetch, 0);
+		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "anonymous");
+		PGDB_FAKE_INT(1);
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	API_FAKE_SESSION(BlacklistFetch, 1);
+
+	return NULL;
+}
+
+TEST_F(APITests, TestAuthCheckBlacklistSuccessBlacklisted) {
+
+	PGDB_FAKE_INIT_FETCH_STORY(BlacklistFetch);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(BlacklistFetch));
+
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	ASSERT_EQ(api_auth_callback_check_blacklist(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(response->status, 403);
+}
+
+
+API_EMPTY_RESULT(EmptyBlacklistFetch);
+
+TEST_F(APITests, TestAuthCheckBlacklistSuccessFree) {
+
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(EmptyBlacklistFetch));
+
+	api_instance_t* instance = manage_instance();
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	ASSERT_EQ(api_auth_callback_check_blacklist(request, response, instance), U_CALLBACK_CONTINUE);
+
+	api_endpoint_free(endpoint);
+}
+
+/** @todo when properly implemented */
+TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActiviy) {
+	
+}
+
 

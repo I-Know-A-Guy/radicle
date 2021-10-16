@@ -74,6 +74,14 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Email not yet verified.";
 		case ERROR_UPDATING_ACCOUNT_EMAIL:
 			return "Failed to update mail.";
+		case ERROR_BLACKLIST_LOOKUP:
+			return "Failed to lookup blacklist.";
+		case FORBIDDEN_BLACKLIST_IP:
+			return "Request aborted since requesters ip has been blacklsited.";
+		case ERROR_SESSION_ACCESS_LOOKUP:
+			return "Failed to lookup session access.";
+		case ERROR_SAVING_BLACKLIST:
+			return "Failed to save new ip to blacklsit";
 		default:
 			return "missing error message.";
 	}

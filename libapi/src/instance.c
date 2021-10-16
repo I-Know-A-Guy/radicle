@@ -316,6 +316,24 @@ int api_instance_load_from_file(const char* file, api_instance_t** config) {
 		return 1;
 	}
 
+	if(api_config_get_number(data, "max_session_accesses", &(*config)->max_session_accesses_in_lookup_delta)) {
+		json_decref(data);
+		api_instance_free(config);
+		return 1;
+	}
+
+	if(api_config_get_number(data, "max_session_accesses_penalty", (int*)&(*config)->max_session_accesses_breach_penalty_in_s)) {
+		json_decref(data);
+		api_instance_free(config);
+		return 1;
+	}
+
+	if(api_config_get_number(data, "session_access_lookup_delta", (int*)&(*config)->session_access_lookup_delta)) {
+		json_decref(data);
+		api_instance_free(config);
+		return 1;
+	}
+
 	if(api_cookie_config_load(data, "session_cookie", &(*config)->session_cookie)) {
 		json_decref(data);
 		api_instance_free(config);

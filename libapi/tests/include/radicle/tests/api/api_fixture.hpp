@@ -105,6 +105,8 @@ class APITests: public RadiclePGDBHooks {
 		api_endpoint_t* endpoint = (api_endpoint_t*)calloc(1, sizeof(api_endpoint_t));
 		endpoint->conn = (pgdb_connection_t*)calloc(1, sizeof(pgdb_connection_t));
 		endpoint->request_log = auth_request_log_new();
+		endpoint->request_log->ip = string_from_literal("127.0.0.1");
+		endpoint->request_log->url = string_from_literal("/testing");
 		response->shared_data = endpoint;
 		return endpoint;
 	}

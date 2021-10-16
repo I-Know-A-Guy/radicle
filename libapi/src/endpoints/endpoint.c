@@ -21,6 +21,20 @@
 #include "radicle/api/endpoints/internal_codes.h"
 #include "radicle/types/uuid.h"
 
+int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
+	*buffer = calloc(1, sizeof(string_t));
+	(*buffer)->length = INET_ADDRSTRLEN;
+	(*buffer)->ptr = calloc(INET_ADDRSTRLEN, sizeof(char));
+	if(inet_ntop(AF_INET, address, (*buffer)->ptr, INET_ADDRSTRLEN) == NULL) {
+		string_free(buffer);
+		return 1;
+	}
+	(*buffer)->length = strnlen((*buffer)->ptr, INET_ADDRSTRLEN);
+
+	*port = ((struct sockaddr_in*)address)->sin_port;
+	return 0;
+}
+
 int api_callback_endpoint_init(const struct _u_request * request, struct _u_response * response, void * user_data) {
 	if(user_data == NULL) {
 		DEBUG("Missing user_data for %s.\n", request->http_url);
@@ -31,6 +45,12 @@ int api_callback_endpoint_init(const struct _u_request * request, struct _u_resp
 
 	endpoint->request_log = auth_request_log_new();
 	endpoint->request_log->date = time(NULL);
+
+	if(socket_info(request->client_address, &endpoint->request_log->ip, &endpoint->request_log->port)) {
+		ERROR("Failed to convert ip to text.\n");
+		endpoint->request_log->ip = string_from_literal("?.?.?.?");
+	}
+	endpoint->request_log->url = string_from_literal(request->url_path);
 
 	response->shared_data = endpoint;
 
@@ -56,6 +76,64 @@ int api_callback_endpoint_load_json_body(const struct _u_request* request, struc
 		return RESPOND(400, "JSON body is expected for this endpoint.", VALIDATION_MISSING_JSON_BODY);
 	} else if(endpoint->json_body->type != JSON_OBJECT)
 		return RESPOND(400, "JSON body is expected for this endpoint.", VALIDATION_MISSING_JSON_BODY);
+
+	return U_CALLBACK_CONTINUE;
+}
+
+int api_auth_callback_check_blacklist(const struct _u_request * request, struct _u_response * response, void * user_data) {
+	api_instance_t* instance = user_data;
+	api_endpoint_t* endpoint = response->shared_data;
+
+	bool blacklisted = false;
+	if(auth_blacklist_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, &blacklisted))
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_BLACKLIST_LOOKUP);
+
+	if(blacklisted) {
+		/** @todo save blacklist access */
+		/** @todo add contact mail */
+		return RESPOND(403, "Your ip has been blocked. If you believe this has been misjudged, please reach out to <mail>.", FORBIDDEN_BLACKLIST_IP);
+	}
+
+	return U_CALLBACK_CONTINUE;
+}
+
+int api_auth_callback_check_ip_for_malicious_activity(const struct _u_request * request, struct _u_response * response, void * user_data) {
+	api_instance_t* instance = user_data;
+	api_endpoint_t* endpoint = response->shared_data;
+	
+
+	list_t* results = NULL;
+	if(auth_session_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, time(NULL) - instance->session_access_lookup_delta, &results)) {
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_SESSION_ACCESS_LOOKUP);
+	}
+
+	/**
+	 * @todo this is currently very badly implemented, since this could
+	 * simply be done by a SQL count query.
+	 */
+	if(results != NULL) {
+		int counter = 0;
+		list_t* iter = results;
+		while(iter != NULL) {
+			auth_session_access_entry_t* entry = (auth_session_access_entry_t*)iter->data;
+			
+			/** @todo maybe check how many resopnsed were 500 or
+			 * whatever. */
+
+			counter++;
+			iter = iter->next;
+		} 
+
+		if(counter >= instance->max_session_accesses_in_lookup_delta) {
+			uint32_t id;
+			if(auth_blacklist_ip(endpoint->conn->connection,
+					       	endpoint->request_log->ip, time(NULL),
+					       	time(NULL) + instance->max_session_accesses_breach_penalty_in_s, &id)) {
+				return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_BLACKLIST);
+			}	
+		}
+
+	}
 
 	return U_CALLBACK_CONTINUE;
 }
@@ -104,26 +182,8 @@ int api_callback_endpoint_check_for_verified_email(const struct _u_request* requ
 	return U_CALLBACK_CONTINUE;
 }
 
-int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
-	*buffer = calloc(1, sizeof(string_t));
-	(*buffer)->length = INET_ADDRSTRLEN;
-	(*buffer)->ptr = calloc(INET_ADDRSTRLEN, sizeof(char));
-	if(inet_ntop(AF_INET, address, (*buffer)->ptr, INET_ADDRSTRLEN) == NULL) {
-		string_free(buffer);
-		return 1;
-	}
-	(*buffer)->length = strnlen((*buffer)->ptr, INET_ADDRSTRLEN);
-
-	*port = ((struct sockaddr_in*)address)->sin_port;
-	return 0;
-}
-
 int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status) {
-	if(socket_info(request->client_address, &endpoint->request_log->ip, &endpoint->request_log->port)) {
-		ERROR("Failed to convert ip to text.\n");
-		endpoint->request_log->ip = string_from_literal("?.?.?.?");
-	}
-	endpoint->request_log->url = string_from_literal(request->url_path);
+	
 	endpoint->request_log->response_code = http_status;
 	endpoint->request_log->internal_status = internal_status;
 	auth_request_log_calculate_response_time(endpoint->request_log);
@@ -250,6 +310,8 @@ void api_add_endpoint(struct _u_instance* instance, const char* method, const ch
 	int counter = 0;
 
 	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_init, api_instance);
+	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_auth_callback_check_blacklist, api_instance);
+	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_auth_callback_check_ip_for_malicious_activity, api_instance);
 	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_session, api_instance);
 	if(authenticated && !verified)
 		ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, &api_callback_endpoint_check_for_authentication, api_instance);

@@ -67,6 +67,18 @@ int api_callback_endpoint_init(const struct _u_request* request, struct _u_respo
 int api_callback_endpoint_load_json_body(const struct _u_request* request, struct _u_response * response, void * user_data);
 
 /**
+ * @brief If ip is blacklisted, terminates request. 
+ */
+int api_auth_callback_check_blacklist(const struct _u_request * request, struct _u_response * response, void * user_data);
+
+/**
+ * @brief Checks if ip has typical malicious behaviour
+ *
+ * @todo implement properly 
+ */
+int api_auth_callback_check_ip_for_malicious_activity(const struct _u_request * request, struct _u_response * response, void * user_data);
+
+/**
  * @brief Checks if request contains cookie for a session. Aka authentication.
  */
 int api_callback_endpoint_check_for_session(const struct _u_request* request, struct _u_response * response, void * user_data);
