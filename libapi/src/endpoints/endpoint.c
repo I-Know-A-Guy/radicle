@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <ulfius.h>
 
 #include "radicle/auth.h"
@@ -23,19 +24,21 @@
 
 int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
 	*buffer = calloc(1, sizeof(string_t));
-	(*buffer)->length = INET_ADDRSTRLEN;
-	(*buffer)->ptr = calloc(INET_ADDRSTRLEN, sizeof(char));
-	if(inet_ntop(AF_INET, address, (*buffer)->ptr, INET_ADDRSTRLEN) == NULL) {
-		string_free(buffer);
-		return 1;
-	}
-	(*buffer)->length = strnlen((*buffer)->ptr, INET_ADDRSTRLEN);
+	(*buffer)->length = NI_MAXHOST;
+	(*buffer)->ptr = calloc(NI_MAXHOST, sizeof(char));
+
+	if (getnameinfo(address, sizeof(*address), (*buffer)->ptr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST)) {
+		ERROR("Failed to translate ip.\n");
+	} 
 
 	*port = ((struct sockaddr_in*)address)->sin_port;
 	return 0;
 }
 
 int api_callback_endpoint_init(const struct _u_request * request, struct _u_response * response, void * user_data) {
+
+	
+                
 	if(user_data == NULL) {
 		DEBUG("Missing user_data for %s.\n", request->http_url);
 		return U_CALLBACK_ERROR;
