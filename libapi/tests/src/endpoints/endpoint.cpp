@@ -7,6 +7,7 @@
 #include <ulfius.h>
 
 #include "radicle/auth/crypto.h"
+#include "radicle/auth/db.h"
 #include "radicle/pgdb.h"
 #include "radicle/tests/api/api_fixture.hpp"
 #include "radicle/api/endpoints/endpoint.h"
@@ -331,9 +332,78 @@ TEST_F(APITests, TestAuthCheckBlacklistSuccessFree) {
 	api_endpoint_free(endpoint);
 }
 
-/** @todo when properly implemented */
-TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActiviy) {
-	
+API_EMPTY_RESULT(IpNoneMalicious);
+
+TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityEmpty) {
+
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(IpNoneMalicious));
+
+	api_instance_t* instance = manage_instance();
+	instance->max_session_accesses_in_lookup_delta = 1;
+	instance->max_session_accesses_breach_penalty_in_s = 100;
+	instance->session_access_lookup_delta = 100;
+
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	ASSERT_EQ(api_auth_callback_check_ip_for_malicious_activity(request, response, instance), U_CALLBACK_CONTINUE);
+
+	api_endpoint_free(endpoint);
+}
+
+PGDB_FAKE_FETCH_STORY(IpMaliciousActivity) {
+	PGDB_FAKE_STORY_BRANCH(IpMaliciousActivity, 0);
+		PGDB_FAKE_RESULT_3(PGRES_TUPLES_OK, "owner", "internal_status", "response_code");
+
+		PGDB_FAKE_UUID(FAKE_UUID);
+		PGDB_FAKE_INT(123);
+		PGDB_FAKE_INT(500);
+
+		PGDB_FAKE_NEXT_ROW();
+
+		PGDB_FAKE_UUID(FAKE_UUID);
+		PGDB_FAKE_INT(123);
+		PGDB_FAKE_INT(500);
+
+		PGDB_FAKE_NEXT_ROW();
+
+		PGDB_FAKE_UUID(FAKE_UUID);
+		PGDB_FAKE_INT(123);
+		PGDB_FAKE_INT(500);
+
+		PGDB_FAKE_FINISH();
+	PGDB_FAKE_STORY_BRANCH_END();
+
+	API_FAKE_SESSION(IpMaliciousActivity, 1);
+
+	return NULL;
+}
+
+static int auth_blacklist_ip_counter = 0;
+int auth_blacklist_ip_fake_counter(PGconn* conn, const string_t* ip, const time_t date, const time_t ban_lift, uint32_t* id) {
+	auth_blacklist_ip_counter++;
+	return 0;
+}
+
+TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityMalicious) {
+
+	PGDB_FAKE_INIT_FETCH_STORY(IpMaliciousActivity);
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(IpMaliciousActivity));
+	install_hook(subhook_new((void*)auth_blacklist_ip, (void*)auth_blacklist_ip_fake_counter, SUBHOOK_64BIT_OFFSET));
+
+	api_instance_t* instance = manage_instance();
+	instance->max_session_accesses_in_lookup_delta = 2;
+	instance->max_session_accesses_breach_penalty_in_s = 100;
+	instance->session_access_lookup_delta = 100;
+
+	_u_request* request = manage_request();
+	_u_response* response = manage_response();
+	api_endpoint_t* endpoint = create_endpoint(response);
+
+	ASSERT_EQ(api_auth_callback_check_ip_for_malicious_activity(request, response, instance), U_CALLBACK_COMPLETE);
+
+	EXPECT_EQ(auth_blacklist_ip_counter, 1);
 }
 
 

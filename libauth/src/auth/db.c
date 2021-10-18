@@ -354,7 +354,7 @@ int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin,
 	if(rows == 0) {
 		pgdb_result_free(&result);
 		*results = NULL;
-		return 1;
+		return 0;
 	}
 
 	for(int i = 0; i < rows; i++) {

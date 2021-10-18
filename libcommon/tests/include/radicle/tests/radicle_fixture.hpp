@@ -26,7 +26,6 @@
 #include "radicle/types/uuid.h"
 #include "radicle/types/linked_list.h"
 
-
 /**
  * @brief Provies common_uuid, common_string and manages strings, uuids and hook.
  */
