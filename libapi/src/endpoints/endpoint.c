@@ -27,9 +27,14 @@ int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int*
 	(*buffer)->length = NI_MAXHOST;
 	(*buffer)->ptr = calloc(NI_MAXHOST, sizeof(char));
 
+	/** @todo port can be extracted from this method, but i think in char */
 	if (getnameinfo(address, sizeof(*address), (*buffer)->ptr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST)) {
 		ERROR("Failed to translate ip.\n");
 	} 
+
+	/* This line is needed for pgdb as it would try to insert 0x00 into the
+	 * database otherwise */
+	(*buffer)->length = strnlen((*buffer)->ptr, NI_MAXHOST);
 
 	*port = ((struct sockaddr_in*)address)->sin_port;
 	return 0;
@@ -106,7 +111,7 @@ int api_auth_callback_check_ip_for_malicious_activity(const struct _u_request * 
 	
 
 	list_t* results = NULL;
-	if(auth_session_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, time(NULL) - instance->session_access_lookup_delta, &results)) {
+	if(auth_session_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, time(NULL) - instance->max_session_accesses_lookup_delta_in_s, &results)) {
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_SESSION_ACCESS_LOOKUP);
 	}
 
@@ -131,7 +136,7 @@ int api_auth_callback_check_ip_for_malicious_activity(const struct _u_request * 
 			uint32_t id;
 			if(auth_blacklist_ip(endpoint->conn->connection,
 					       	endpoint->request_log->ip, time(NULL),
-					       	time(NULL) + instance->max_session_accesses_breach_penalty_in_s, &id)) {
+					       	time(NULL) + instance->max_session_accesses_penalty_in_s, &id)) {
 				return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_BLACKLIST);
 			}	
 

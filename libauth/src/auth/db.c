@@ -313,7 +313,7 @@ int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const
 }
 
 int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted) {
-	const char* stmt = "SELECT 1 FROM Blacklist WHERE ip=$1::text AND (ban_lift = NULL OR ban_lift < $2::timestamp) LIMIT 1;";
+	const char* stmt = "SELECT 1 FROM Blacklist WHERE ip=$1::text AND (ban_lift IS NULL OR ban_lift < $2::timestamp) LIMIT 1;";
 
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(ip, params);
@@ -334,9 +334,9 @@ int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted
 }
 
 int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin, list_t** results) {
-	const char* stmt = "Select Sessions.owner, SessionAccesses.internal_status, SessionAccesses.response_code FROM SessionAccesses "
+	const char* stmt = "SELECT Sessions.owner, SessionAccesses.internal_status, SessionAccesses.response_code FROM SessionAccesses "
 				"JOIN Sessions ON SessionAccesses.session_id=Sessions.id "
-				"WHERE SessionsAccesses.requester_ip=$1::text AND SessionsAccesses.date > $2::timestamp;";
+				"WHERE SessionAccesses.requester_ip=$1::text AND SessionAccesses.date > $2::timestamp;";
 
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(ip, params);

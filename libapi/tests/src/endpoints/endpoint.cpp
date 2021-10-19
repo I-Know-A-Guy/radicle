@@ -340,8 +340,8 @@ TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityEmpty) {
 
 	api_instance_t* instance = manage_instance();
 	instance->max_session_accesses_in_lookup_delta = 1;
-	instance->max_session_accesses_breach_penalty_in_s = 100;
-	instance->session_access_lookup_delta = 100;
+	instance->max_session_accesses_penalty_in_s = 100;
+	instance->max_session_accesses_lookup_delta_in_s = 100;
 
 	_u_request* request = manage_request();
 	_u_response* response = manage_response();
@@ -394,8 +394,8 @@ TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityMalicious) {
 
 	api_instance_t* instance = manage_instance();
 	instance->max_session_accesses_in_lookup_delta = 2;
-	instance->max_session_accesses_breach_penalty_in_s = 100;
-	instance->session_access_lookup_delta = 100;
+	instance->max_session_accesses_penalty_in_s = 100;
+	instance->max_session_accesses_lookup_delta_in_s = 100;
 
 	_u_request* request = manage_request();
 	_u_response* response = manage_response();

@@ -87,9 +87,9 @@ typedef struct api_instance {
 	string_t* password_reset_url; /**< URL which will be used for reseting password using a token. */
 	string_t* no_associated_account_url; /**< Users will be routed to this url, if they tried to reset password for an email which does not exist. */
 	string_t* change_email_url; /**< Url which verifies token used for updating mail */
-	time_t session_access_lookup_delta; /**< Time in seconds of how which accesses should be retrieved. */
+	time_t max_session_accesses_lookup_delta_in_s; /**< Time in seconds of how which accesses should be retrieved. */
 	int max_session_accesses_in_lookup_delta; /**< If user exceeds this delta, the user will be banned for x seconds. */
-	time_t max_session_accesses_breach_penalty_in_s; /**< Amount of time ip will be banned. */
+	time_t max_session_accesses_penalty_in_s; /**< Amount of time ip will be banned. */
 	void* custom;
 } api_instance_t;
 

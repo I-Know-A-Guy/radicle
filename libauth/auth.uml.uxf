@@ -46,8 +46,8 @@ m2=1..*</panel_attributes><additional_attributes>10;10;10;100</additional_attrib
 &lt;&lt;pk&gt;&gt; id SERIAL
 -
 ip TEXT NOT NULL
-added DATE NOT NULL
-ban_lift DATE</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>490</x><y>60</y><w>270</w><h>100</h></coordinates><panel_attributes>BlacklistAccesses
+added TIMESTAMP NOT NULL
+ban_lift TIMESTAMP</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>490</x><y>60</y><w>270</w><h>100</h></coordinates><panel_attributes>BlacklistAccesses
 -
 &lt;&lt;pk&gt;&gt; id SERIAL
 &lt;&lt;fk&gt;&gt; blacklist_id int NOT NULL
