@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(BUILD_TESTING ON)
-set(CMAKE_BUILD_TYPE DEBUG)
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set(BUILD_TESTING OFF)
+set(CMAKE_BUILD_TYPE RELEASE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS FALSE)
 
 project(radicle VERSION 0.1 DESCRIPTION "A C library containing common functionalities like database access or authentication using cookies to help grow REST API's.")
 
