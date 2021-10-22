@@ -3,9 +3,12 @@
  */
 
 #include <jansson.h>
+#include <openssl/pkcs7.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <ulfius.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "radicle/api/instance.h"
 #include "radicle/api/endpoints/internal_codes.h"
@@ -411,6 +414,27 @@ int api_setup_instance(api_instance_t* config, struct _u_instance* instance) {
 	return 0;
 }
 
+static bool terminate = false;
+
+void signal_handler(int signo, siginfo_t* info, void* context) {
+	terminate = true;
+}
+
+
+int await_sigterm() {
+	struct sigaction act = { 0 };
+	act.sa_flags = SA_SIGINFO;
+	act.sa_sigaction = &signal_handler;
+	if(sigaction(SIGTERM, &act, NULL) == -1) {
+		ERROR("Failed to listen to SIGTERM\n");
+		return 1;
+	}
+
+	while(!terminate);
+
+	return 0;
+}
+
 int api_serve(struct _u_instance* instance) {
 	if (ulfius_start_framework(instance) == U_OK) {
 		char txt_addr[INET_ADDRSTRLEN];
@@ -420,9 +444,7 @@ int api_serve(struct _u_instance* instance) {
 			DEBUG("Serving on http://%s:%d\n", txt_addr, instance->port);
 		}
 
-		// Wait for the user to press <enter> on the console to quit the application
-		getchar();
-		return 0;
+		return await_sigterm();
 	} else { 
 		return 1;
 	}
@@ -461,9 +483,7 @@ int api_serve_secure(struct _u_instance* instance, const api_instance_t* config)
 			DEBUG("Serving on https://%s:%d\n", txt_addr, instance->port);
 		}
 
-		// Wait for the user to press <enter> on the console to quit the application
-		getchar();
-		return 0;
+		return await_sigterm();
 	} else { 
 		return 1;
 	}
