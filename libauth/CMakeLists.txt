@@ -35,7 +35,6 @@ if(BUILD_TESTING)
 			tests/include/radicle/tests/auth/auth_fixture.hpp
 			tests/src/crypto.cpp
 			tests/src/db.cpp
-			tests/src/auth.cpp
 	)
 
 	target_include_directories(

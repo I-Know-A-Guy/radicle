@@ -3,6 +3,12 @@
 
 int radicle_load_config(const char* file, json_t** data) {
 	FILE* stream = fopen(file, "r");
+
+	if(stream == NULL) {
+		ERROR("Failed to load %s.\n", file);
+		return 1;
+	}
+
 	json_error_t error;
 	*data = json_loadf(stream, 0, &error);
 	fclose(stream);
