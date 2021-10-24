@@ -349,6 +349,17 @@ TEST_F(RadicleAuthTests, TestSaveBlacklistFailure) {
 	ASSERT_EQ(auth_blacklist_ip(NULL, common_string, time(NULL), time(NULL), &id), 1);
 }
 
+TEST_F(RadicleAuthTests, TestSaveBlacklistAccessSuccess) {
+	install_execute_always_success();
+	ASSERT_EQ(auth_save_blacklist_access(NULL, 1, time(NULL), common_string), 0);
+}
+
+TEST_F(RadicleAuthTests, TestSaveBlacklistAccessFailure) {
+	install_pg_exec_param_hook();
+	install_status_fatal_error();
+	ASSERT_EQ(auth_save_blacklist_access(NULL, 1, time(NULL), common_string), 1);
+}
+
 TEST_F(RadicleAuthTests, TestSaveBlacklistEmptyData) {
 	install_status_fatal_error();
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
@@ -364,29 +375,29 @@ TEST_F(RadicleAuthTests, TestSaveBlacklistWrongColumn) {
 }
 
 PGDB_FAKE_FETCH(BlacklistLookup) {
-	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "anonymous");
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
 	PGDB_FAKE_INT(1);
 	PGDB_FAKE_FINISH();
 }
 
 TEST_F(RadicleAuthTests, TestLookupBlackListSuccess) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(BlacklistLookup));
-	bool blacklisted = false;
-	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 0);
-	EXPECT_TRUE(blacklisted);
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &id), 0);
+	EXPECT_EQ(id, 1);
 }
 
 TEST_F(RadicleAuthTests, TestLookupBlackListSuccess2) {
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
-	bool blacklisted = false;
-	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 0);
-	EXPECT_FALSE(blacklisted);
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &id), 0);
+	EXPECT_EQ(id, 0);
 }
 
 TEST_F(RadicleAuthTests, TestLookupBlackListFailure) {
 	install_status_fatal_error();
-	bool blacklisted = false;
-	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &blacklisted), 1);
+	uint32_t id;
+	ASSERT_EQ(auth_blacklist_lookup_ip(NULL, common_string, &id), 1);
 }
 
 PGDB_FAKE_FETCH(SessionAccessLookup) {

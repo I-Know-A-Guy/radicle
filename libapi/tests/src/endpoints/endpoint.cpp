@@ -290,7 +290,7 @@ TEST_F(APITests, TestEndointCheckForVerifiedEmailSuccess) {
 PGDB_FAKE_FETCH_STORY(BlacklistFetch) {
 
 	PGDB_FAKE_STORY_BRANCH(BlacklistFetch, 0);
-		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "anonymous");
+		PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "id");
 		PGDB_FAKE_INT(1);
 		PGDB_FAKE_FINISH();
 	PGDB_FAKE_STORY_BRANCH_END();
@@ -304,6 +304,8 @@ TEST_F(APITests, TestAuthCheckBlacklistSuccessBlacklisted) {
 
 	PGDB_FAKE_INIT_FETCH_STORY(BlacklistFetch);
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(BlacklistFetch));
+
+	install_execute_always_success();
 
 	api_instance_t* instance = manage_instance();
 	_u_request* request = manage_request();
@@ -337,6 +339,7 @@ API_EMPTY_RESULT(IpNoneMalicious);
 TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityEmpty) {
 
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(IpNoneMalicious));
+	install_execute_always_success();
 
 	api_instance_t* instance = manage_instance();
 	instance->max_session_accesses_in_lookup_delta = 1;
