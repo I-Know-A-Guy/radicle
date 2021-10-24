@@ -136,17 +136,19 @@ int api_auth_callback_check_ip_for_malicious_activity(const struct _u_request * 
 			iter = iter->next;
 		} 
 
+		list_free(iter, &auth_session_access_entry_free);
+
 		if(counter >= instance->max_session_accesses_in_lookup_delta) {
 			uint32_t id;
 			if(auth_blacklist_ip(endpoint->conn->connection,
 					       	endpoint->request_log->ip, time(NULL),
 					       	time(NULL) + instance->max_session_accesses_penalty_in_s, &id)) {
 				return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_BLACKLIST);
-			}	
+			}
 
-			/**
-			 * @todo save blacklist access
-			 */
+			if(auth_save_blacklist_access(endpoint->conn->connection, id, time(NULL), endpoint->request_log->url)) {
+				return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVE_BLACKLIST_ACCESS);
+			}
 
 			return RESPOND(403, "Your ip has been blocked.", FORBIDDEN_BLACKLIST_IP);
 		}

@@ -339,6 +339,7 @@ API_EMPTY_RESULT(IpNoneMalicious);
 TEST_F(APITests, TestAuthCallbackCheckIpForMaliciousActivityEmpty) {
 
 	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(IpNoneMalicious));
+	install_execute_always_success();
 
 	api_instance_t* instance = manage_instance();
 	instance->max_session_accesses_in_lookup_delta = 1;
