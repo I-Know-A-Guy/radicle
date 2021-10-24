@@ -80,7 +80,8 @@ typedef enum internal_errors {
 	ERROR_BLACKLIST_LOOKUP,
 	ERROR_SESSION_ACCESS_LOOKUP,
 	FORBIDDEN_BLACKLIST_IP,
-	ERROR_SAVING_BLACKLIST
+	ERROR_SAVING_BLACKLIST,
+	ERROR_SAVE_BLACKLIST_ACCESS
 } internal_errors_t;
 
 const char* internal_errors_msg(internal_errors_t code);

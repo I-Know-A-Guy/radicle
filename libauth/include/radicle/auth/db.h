@@ -192,15 +192,27 @@ int auth_get_session_by_cookie(PGconn* conn, const string_t* cookie, uint32_t* i
 int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const time_t ban_lift, uint32_t* id);
 
 /**
+ * @brief Saves url which was accessed by blacklisted ip.
+ *
+ * @param conn Connection to database
+ * @param id Identifier of blacklist row
+ * @param date Timestamp of when the forbidden adccess happended
+ * @param url URL which was tried to access.
+ *
+ * @return Returns 0 on success
+ */
+int auth_save_blacklist_access(PGconn* conn, const int id, const time_t date, const string_t* url);
+
+/**
  * @brief Lookups if given ip is currently  blacklisted
  *
  * @param conn Connection to database
  * @param ip Ip to lookup
- * @param blacklsited Result of query. If true, ip is currently blacklisted
+ * @param id Identifier of result, 0 if none exist
  *
  * @return Returns 0 on success
  */
-int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted);
+int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, uint32_t* id);
 
 /**
  * @brief Retrieves all session accesses by ip. Make sure to use a small begin,

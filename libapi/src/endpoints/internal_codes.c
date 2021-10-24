@@ -82,6 +82,8 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Failed to lookup session access.";
 		case ERROR_SAVING_BLACKLIST:
 			return "Failed to save new ip to blacklsit";
+		case ERROR_SAVE_BLACKLIST_ACCESS:
+			return "Failed to save blacklist access.";
 		default:
 			return "missing error message.";
 	}

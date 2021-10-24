@@ -27,7 +27,6 @@ int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int*
 	(*buffer)->length = NI_MAXHOST;
 	(*buffer)->ptr = calloc(NI_MAXHOST, sizeof(char));
 
-	/** @todo port can be extracted from this method, but i think in char */
 	if (getnameinfo(address, sizeof(*address), (*buffer)->ptr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST)) {
 		ERROR("Failed to translate ip.\n");
 	} 
@@ -92,12 +91,17 @@ int api_auth_callback_check_blacklist(const struct _u_request * request, struct 
 	api_instance_t* instance = user_data;
 	api_endpoint_t* endpoint = response->shared_data;
 
-	bool blacklisted = false;
-	if(auth_blacklist_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, &blacklisted))
+	uint32_t blacklist_id;
+	if(auth_blacklist_lookup_ip(endpoint->conn->connection, endpoint->request_log->ip, &blacklist_id))
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_BLACKLIST_LOOKUP);
 
-	if(blacklisted) {
-		/** @todo save blacklist access */
+	if(blacklist_id != 0) {
+
+		if(auth_save_blacklist_access(endpoint->conn->connection, blacklist_id, time(NULL), endpoint->request_log->url)) {
+			DEBUG("Failed to insert blacklist access\n");
+			return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVE_BLACKLIST_ACCESS);
+		}
+
 		/** @todo add contact mail */
 		return RESPOND(403, "Your ip has been blocked. If you believe this has been misjudged, please reach out to <mail>.", FORBIDDEN_BLACKLIST_IP);
 	}

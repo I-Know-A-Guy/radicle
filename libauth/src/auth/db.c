@@ -312,8 +312,19 @@ int auth_blacklist_ip(PGconn* conn, const string_t* ip, const time_t date, const
 	return 0;
 }
 
-int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted) {
-	const char* stmt = "SELECT 1 FROM Blacklist WHERE ip=$1::text AND (ban_lift IS NULL OR ban_lift < $2::timestamp) LIMIT 1;";
+int auth_save_blacklist_access(PGconn* conn, const int id, const time_t date, const string_t* url) {
+	const char* stmt = "INSERT INTO BlacklistAccesses(blacklist_id, date, url) VALUES ($1::int, $2::timestamp, $3::text);";
+	pgdb_params_t* params = pgdb_params_new(3);
+	pgdb_bind_uint32(id, params);
+	pgdb_bind_timestamp(date, params);
+	pgdb_bind_text(url, params);
+	int result = pgdb_execute_param(conn, stmt, params);
+	pgdb_params_free(&params);
+	return result;
+}
+
+int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, uint32_t* id) {
+	const char* stmt = "SELECT id FROM Blacklist WHERE ip=$1::text AND (ban_lift IS NULL OR ban_lift < $2::timestamp) LIMIT 1;";
 
 	pgdb_params_t* params = pgdb_params_new(2);
 	pgdb_bind_text(ip, params);
@@ -325,7 +336,17 @@ int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, bool* blacklisted
 		return 1;
 	}
 
-	*blacklisted = PQntuples(result->pg) == 1;
+	if(PQntuples(result->pg) == 1) {
+		if(pgdb_get_uint32(result, 0, "id", id)) {
+			*id = 0;
+			pgdb_params_free(&params);
+			pgdb_result_free(&result);
+			DEBUG("Failed to extract id\n");
+			return 1;
+		}
+	} else {
+		*id = 0;
+	}
 
 	pgdb_params_free(&params);
 	pgdb_result_free(&result);
