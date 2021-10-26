@@ -414,24 +414,9 @@ int api_setup_instance(api_instance_t* config, struct _u_instance* instance) {
 	return 0;
 }
 
-static bool terminate = false;
-
-void signal_handler(int signo, siginfo_t* info, void* context) {
-	terminate = true;
-}
-
-
 int await_sigterm() {
-	struct sigaction act = { 0 };
-	act.sa_flags = SA_SIGINFO;
-	act.sa_sigaction = &signal_handler;
-	if(sigaction(SIGTERM, &act, NULL) == -1) {
-		ERROR("Failed to listen to SIGTERM\n");
-		return 1;
-	}
 
-	while(!terminate)
-		usleep(500);
+	pause();
 
 	return 0;
 }
