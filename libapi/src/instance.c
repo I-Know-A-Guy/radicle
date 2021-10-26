@@ -430,7 +430,8 @@ int await_sigterm() {
 		return 1;
 	}
 
-	while(!terminate);
+	while(!terminate)
+		usleep(500);
 
 	return 0;
 }
