@@ -236,6 +236,17 @@ int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin,
  */
 int auth_save_file(PGconn* conn, auth_file_t* file);
 
+/**
+ * @brief Gets file
+ *
+ * @param conn Connection to database
+ * @param uuid UUID of file to retrieve
+ * @param file File struct which will contains all releveant info
+ *
+ * @return Returns 0 on success
+ */
+int auth_get_file(PGconn* conn, const uuid_t* uuid, auth_file_t** file);
+
 #if defined(__cplusplus)
 }
 #endif

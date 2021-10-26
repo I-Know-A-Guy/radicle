@@ -77,7 +77,7 @@ string_t* uuid_to_str(const uuid_t* uuid);
  *
  * @returns Returns a new pointer to \ref uuid_t.
  */
-uuid_t* uuid_copy(uuid_t* uuid);
+uuid_t* uuid_copy(const uuid_t* uuid);
 
 #if defined(__cplusplus)
 }

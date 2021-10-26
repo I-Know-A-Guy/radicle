@@ -478,3 +478,47 @@ TEST_F(RadicleAuthTests, TestAuthSaveFileWrongColumns) {
 	EXPECT_TRUE(file->uuid == NULL);
 }
 
+PGDB_FAKE_FETCH(FetchGetFile) {
+	PGDB_FAKE_RESULT_6(PGRES_TUPLES_OK, "owner", "type", "path", "name", "uploaded", "size");
+	PGDB_FAKE_UUID(FAKE_UUID);
+	PGDB_FAKE_C_STR(file_type_to_str(IMAGE_PNG));
+	PGDB_FAKE_C_STR("Path");
+	PGDB_FAKE_C_STR("Name");
+	PGDB_FAKE_TIMESTAMP(12345);
+	PGDB_FAKE_INT(1234);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestAuthGetFile) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchGetFile));	
+
+	auth_file_t* file = NULL;
+	ASSERT_EQ(auth_get_file(NULL, common_uuid, &file), 0);
+	ASSERT_TRUE(file != NULL);
+	auth_file_free(&file);
+}
+
+TEST_F(RadicleAuthTests, TestAuthGetFileError) {
+	install_status_fatal_error();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchGetFile));	
+
+	auth_file_t* file = NULL;
+	ASSERT_EQ(auth_get_file(NULL, common_uuid, &file), 1);
+	ASSERT_TRUE(file == NULL);
+}
+
+TEST_F(RadicleAuthTests, TestAuthGetFileEmptyData) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));	
+
+	auth_file_t* file = NULL;
+	ASSERT_EQ(auth_get_file(NULL, common_uuid, &file), 1);
+	ASSERT_TRUE(file == NULL);
+}
+
+TEST_F(RadicleAuthTests, TestAuthGetFileWrongColumn) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongColumns));	
+
+	auth_file_t* file = NULL;
+	ASSERT_EQ(auth_get_file(NULL, common_uuid, &file), 1);
+	ASSERT_TRUE(file == NULL);
+}

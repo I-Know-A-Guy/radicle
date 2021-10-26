@@ -411,6 +411,40 @@ int auth_save_file(PGconn* conn, auth_file_t* file) {
 		PQntuples(result->pg) != 1 ||
 		pgdb_get_uuid(result, 0, "uuid", &file->uuid));
 
+	pgdb_result_free(&result);
 	pgdb_params_free(&params);
 	return r;
+}
+
+int auth_get_file(PGconn* conn, const uuid_t* uuid, auth_file_t** file) {
+	const char* stmt = "SELECT owner, type, path, name, uploaded, size FROM Files WHERE uuid=$1::uuid;";
+	pgdb_params_t* params = pgdb_params_new(1);
+	pgdb_bind_uuid(uuid, params);
+
+	pgdb_result_t* result = NULL;
+
+	if(pgdb_fetch_param(conn, stmt, params, &result) ||
+		PQntuples(result->pg) != 1) {
+		pgdb_params_free(&params);
+		return 1;
+	}
+
+	pgdb_params_free(&params);
+
+	*file = calloc(1, sizeof(auth_file_t));
+
+	if(pgdb_get_uuid(result, 0, "owner", &(*file)->owner) ||
+		pgdb_get_enum(result, 0, "type", &file_type_from_str, (int*)&(*file)->type) ||
+		pgdb_get_text(result, 0, "path", &(*file)->path) ||
+		pgdb_get_text(result, 0, "name", &(*file)->name) ||
+		pgdb_get_timestamp(result, 0, "uploaded", &(*file)->uploaded) ||
+		pgdb_get_uint64(result, 0, "size", &(*file)->size)) {
+		pgdb_result_free(&result);
+		auth_file_free(file);
+		return 1;
+	}
+
+	(*file)->uuid = uuid_copy(uuid);
+	pgdb_result_free(&result);
+	return 0;	
 }

@@ -60,7 +60,7 @@ string_t* uuid_to_str(const uuid_t* uuid) {
 	return buf;
 }
 
-uuid_t* uuid_copy(uuid_t* uuid) {
+uuid_t* uuid_copy(const uuid_t* uuid) {
 	if(uuid == NULL) return NULL;
 	uuid_t* buf = calloc(1, sizeof(uuid_t));
 	memcpy(buf->bin, uuid->bin, 16);
