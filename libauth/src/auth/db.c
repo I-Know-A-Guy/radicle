@@ -394,3 +394,23 @@ int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin,
 	pgdb_result_free(&result);
 	return 0;
 }
+
+int auth_save_file(PGconn* conn, auth_file_t* file) {
+	const char* stmt = "INSERT INTO Files(uuid, owner, type, path, name, uploaded, size)"
+	       " VALUES(gen_random_uuid(), $1::uuid, $2::FileTypes, $3::text, $4::text, $5::timestamp, $6::biging) RETURNING uuid;";
+	pgdb_params_t* params = pgdb_params_new(6);
+	pgdb_bind_uuid(file->owner, params);
+	pgdb_bind_c_str(file_type_to_str(file->type), params);
+	pgdb_bind_text(file->path, params);
+	pgdb_bind_text(file->name, params);
+	pgdb_bind_timestamp(file->uploaded, params);
+	pgdb_bind_uint64(file->size, params);
+
+	pgdb_result_t* result = NULL;
+	int r = (pgdb_fetch_param(conn, stmt, params, &result) ||
+		PQntuples(result->pg) != 1 ||
+		pgdb_get_uuid(result, 0, "uuid", &file->uuid));
+
+	pgdb_params_free(&params);
+	return r;
+}

@@ -175,15 +175,29 @@ typedef struct auth_session_access_entry {
 
 void auth_session_access_entry_free(void* ptr);
 
-/*
- * @todo implement
-typedef struct auth_blacklist_entry {
-	uint32_t id;
-	string_t* ip;
-	time_t added;
-	time_t ban_lift;
-} auth_blacklist_entry_t;
-*/
+typedef enum file_type {
+	UNKNOWN=0,
+	IMAGE_JPEG,
+	IMAGE_PNG
+} file_type_t;
+
+int file_type_from_str(const char* type);
+const char* file_type_to_str(file_type_t type);
+
+typedef struct auth_file {
+	uuid_t* uuid;
+	uuid_t* owner;
+	file_type_t type;
+	string_t* path;
+	string_t* name;
+	uint64_t size;
+	time_t uploaded;
+} auth_file_t;
+
+/**
+ * @brief Frees a auth_file_t and all its associated data.
+ */
+void auth_file_free(auth_file_t** file);
 
 #if defined(__cplusplus)
 }
