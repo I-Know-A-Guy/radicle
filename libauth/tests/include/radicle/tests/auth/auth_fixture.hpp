@@ -36,6 +36,7 @@
 #include "radicle/auth/db.h"
 #include "radicle/auth.h"
 #include "radicle/tests/pgdb_hooks.hpp"
+#include "radicle/types/uuid.h"
 
 /**
  * @brief Class for tests which use any of the Auth functions.
@@ -43,6 +44,7 @@
 class RadicleAuthTests: public RadiclePGDBHooks {
 
 	std::vector<auth_account_t*> accounts; /**< Account pointers which will be freed on TearDown() */
+	std::vector<auth_file_t*> files; /**< File pointers which will be freed on TearDown() */
 	std::vector<auth_cookie_t*> cookies; /**< Cookie pointers which will be freed on TearDown() */
 
 	protected:
@@ -66,6 +68,9 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 		void TearDown() override {
 			for(std::vector<auth_account_t*>::iterator iter = accounts.begin(); iter != accounts.end(); iter++) {
 				auth_account_free(iter.base());
+			}
+			for(std::vector<auth_file_t*>::iterator iter = files.begin(); iter != files.end(); iter++) {
+				auth_file_free(iter.base());
 			}
 			for(std::vector<auth_cookie_t*>::iterator iter = cookies.begin(); iter != cookies.end(); iter++) {
 				auth_cookie_free(iter.base());
@@ -96,6 +101,16 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 				       	0);
 			accounts.push_back(buf);
 			return buf;
+		}
+
+		auth_file_t* manage_file() {
+			auth_file_t* file = (auth_file_t*) calloc(1, sizeof(auth_file_t));
+			file->name = string_copy(common_string);
+			file->path = string_copy(common_string);
+			file->owner = uuid_copy(common_uuid);
+			file->type = IMAGE_JPEG;
+			files.push_back(file);
+			return file;
 		}
 
 		/**

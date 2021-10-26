@@ -225,6 +225,17 @@ int auth_blacklist_lookup_ip(PGconn* conn, const string_t* ip, uint32_t* id);
  */
 int auth_session_lookup_ip(PGconn* conn, const string_t* ip, const time_t begin, list_t** results);
 
+/**
+ * @brief Saves file information to database.
+ *
+ * @param conn Connection to database
+ * @param file File struct containing all relevant information. uuid will be set
+ * with this funtion.
+ *
+ * @return Returns 0 on success
+ */
+int auth_save_file(PGconn* conn, auth_file_t* file);
+
 #if defined(__cplusplus)
 }
 #endif

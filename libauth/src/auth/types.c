@@ -132,3 +132,34 @@ void auth_session_access_entry_free(void* ptr) {
 	uuid_free(&entry->owner);
 	free(ptr);
 }
+
+int file_type_from_str(const char* type) {
+	if(strcmp(type, "image/jpeg") == 0 || strcmp(type, "image/jpg") == 0) {
+		return IMAGE_JPEG;
+	} else if(strcmp(type, "image/png") == 0) {
+		return IMAGE_PNG;
+	}
+	return UNKNOWN;
+}
+
+const char* file_type_to_str(file_type_t type) {
+	switch(type) {
+		case IMAGE_JPEG:
+			return "image/jpeg";
+		case IMAGE_PNG:
+			return "image/png";
+		default:
+			return NULL;
+	}
+}
+
+void auth_file_free(auth_file_t** file) {
+	if(*file == NULL) return;
+	uuid_free(&(*file)->uuid);
+	uuid_free(&(*file)->owner);
+	string_free(&(*file)->path);
+	string_free(&(*file)->name);
+	free(*file);
+	*file = NULL;
+}
+

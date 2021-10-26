@@ -439,3 +439,42 @@ TEST_F(RadicleAuthTests, TestLookupSessionAccessesSuccess) {
 	EXPECT_EQ(memcmp(second->owner->bin, FAKE_UUID, 16), 0);
 }
 
+PGDB_FAKE_FETCH(FetchFileUuid) {
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "uuid");
+	PGDB_FAKE_UUID(FAKE_UUID);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(RadicleAuthTests, TestAuthSaveFileSuccess) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchFileUuid));
+
+	auth_file_t* file = manage_file(); 
+	ASSERT_EQ(auth_save_file(NULL, file), 0);
+	EXPECT_EQ(memcmp(file->uuid->bin, FAKE_UUID, 16), 0);
+}
+
+TEST_F(RadicleAuthTests, TestAuthSaveFileError) {
+	install_status_fatal_error();
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchFileUuid));
+
+	auth_file_t* file = manage_file(); 
+	ASSERT_EQ(auth_save_file(NULL, file), 1);
+	EXPECT_TRUE(file->uuid == NULL);
+}
+
+TEST_F(RadicleAuthTests, TestAuthSaveFileEmptyData) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchEmptyData));
+
+	auth_file_t* file = manage_file(); 
+	ASSERT_EQ(auth_save_file(NULL, file), 1);
+	EXPECT_TRUE(file->uuid == NULL);
+}
+
+TEST_F(RadicleAuthTests, TestAuthSaveFileWrongColumns) {
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchWrongColumns));
+
+	auth_file_t* file = manage_file(); 
+	ASSERT_EQ(auth_save_file(NULL, file), 1);
+	EXPECT_TRUE(file->uuid == NULL);
+}
+
