@@ -435,7 +435,6 @@ int api_auth_callback_verify_new_email(const struct _u_request * request, struct
 	return RESPOND(200, DEFAULT_200_MSG, SUCCESS);
 }
 
-/** @todo test this function */
 int api_auth_callback_upload_file(const struct _u_request * request, struct _u_response * response, void * user_data) {
 	api_instance_t* instance = user_data;
 	api_endpoint_t* endpoint = response->shared_data;
@@ -458,9 +457,7 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 	}
 
 	file_type_t file_type = file_type_from_str(content_type_str->ptr);
-	DEBUG("%s %d:%d\n", content_type_str->ptr, file_type, file_type & endpoint->file_upload->allowed_files);
 	string_free(&content_type_str);
-
 
 	if((file_type & endpoint->file_upload->allowed_files) == 0) {
 		api_endpoint_safe_rollback(request, response);
