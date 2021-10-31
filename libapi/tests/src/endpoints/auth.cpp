@@ -401,3 +401,114 @@ TEST_F(APITests, AuthCallbackVerifyNewEmailTokenNotFound) {
 
 	EXPECT_EQ(response->status, 400);
 }
+
+#define FAKE_IMAGE_SIZE 100
+#define FAKE_IMAGE_SIZE_C_STR "100"
+
+FILE *fopen_fake_success(const char *__restrict __filename, const char *__restrict __modes) {
+	return (FILE*)0x1;
+}
+
+size_t fwrite_fake_success(const void *__restrict __ptr, size_t __size, size_t __n, FILE *__restrict __s) {
+	return FAKE_IMAGE_SIZE;
+}
+
+int fclose_fake_success(FILE *__stream) {
+	return 0;
+}
+
+PGDB_FAKE_FETCH(FetchFileUuid) {
+	PGDB_FAKE_RESULT_1(PGRES_TUPLES_OK, "uuid");
+	PGDB_FAKE_UUID(FAKE_UUID);
+	PGDB_FAKE_FINISH();
+}
+
+TEST_F(APITests, AuthCallbackUploadFileSuccess) {
+
+	install_hook(subhook_new((void*)fopen, (void*)fopen_fake_success, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)fwrite, (void*)fwrite_fake_success, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)fclose, (void*)fclose_fake_success, SUBHOOK_64BIT_OFFSET));
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchFileUuid));
+
+	u_map_put(request->map_header, "Content-Length", FAKE_IMAGE_SIZE_C_STR);
+	u_map_put(request->map_header, "Content-Type", "image/png");
+	ulfius_set_binary_body_request(request, "[+w]JRpn7P4Y.F4@Yyi2NV38&.!n$"
+						"!gLy5VU&5W}92SG$AW{7X?MDM8}&q"
+						"k2A&$)HTz-b54ERGqU;9:J%}h8Fb&C"
+						"v_A6QD;WLE2T", FAKE_IMAGE_SIZE);
+
+	authenticate_endpoint();
+	endpoint->file_upload = (api_file_upload_t*)calloc(1, sizeof(api_file_upload_t));
+	endpoint->file_upload->allowed_files = FILE_TYPE_IMAGE_PNG;
+	endpoint->file_upload->relative_path = string_from_literal("testfile.png");
+
+	ASSERT_EQ(api_auth_callback_upload_file(request, response, instance), U_CALLBACK_CONTINUE);
+	
+	api_endpoint_free(endpoint);
+}
+
+TEST_F(APITests, AuthCallbackUploadFileInvalidFileType) {
+	u_map_put(request->map_header, "Content-Length", FAKE_IMAGE_SIZE_C_STR);
+	u_map_put(request->map_header, "Content-Type", "image/nils");
+	ulfius_set_binary_body_request(request, "[+w]JRpn7P4Y.F4@Yyi2NV38&.!n$"
+						"!gLy5VU&5W}92SG$AW{7X?MDM8}&q"
+						"k2A&$)HTz-b54ERGqU;9:J%}h8Fb&C"
+						"v_A6QD;WLE2T", FAKE_IMAGE_SIZE);
+
+	authenticate_endpoint();
+	endpoint->file_upload = (api_file_upload_t*)calloc(1, sizeof(api_file_upload_t));
+	endpoint->file_upload->allowed_files = FILE_TYPE_IMAGE_PNG;
+	endpoint->file_upload->relative_path = string_from_literal("testfile.png");
+
+	ASSERT_EQ(api_auth_callback_upload_file(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 400);
+}
+
+TEST_F(APITests, AuthCallbackUploadFileInvalidFileSize) {
+	u_map_put(request->map_header, "Content-Length", "1234");
+	u_map_put(request->map_header, "Content-Type", "image/nils");
+	ulfius_set_binary_body_request(request, "[+w]JRpn7P4Y.F4@Yyi2NV38&.!n$"
+						"!gLy5VU&5W}92SG$AW{7X?MDM8}&q"
+						"k2A&$)HTz-b54ERGqU;9:J%}h8Fb&C"
+						"v_A6QD;WLE2T", FAKE_IMAGE_SIZE);
+
+	authenticate_endpoint();
+	endpoint->file_upload = (api_file_upload_t*)calloc(1, sizeof(api_file_upload_t));
+	endpoint->file_upload->allowed_files = FILE_TYPE_IMAGE_PNG;
+	endpoint->file_upload->relative_path = string_from_literal("testfile.png");
+
+	ASSERT_EQ(api_auth_callback_upload_file(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 400);
+}
+
+TEST_F(APITests, AuthCallbackUploadFileNotProperlyPrepared) {
+	ASSERT_EQ(api_auth_callback_upload_file(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 500);
+}
+
+FILE *fopen_fake_failure(const char *__restrict __filename, const char *__restrict __modes) {
+	return NULL;
+}
+
+TEST_F(APITests, AuthCallbackUploadFileFopenFailure) {
+
+	install_hook(subhook_new((void*)fopen, (void*)fopen_fake_failure, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)fwrite, (void*)fwrite_fake_success, SUBHOOK_64BIT_OFFSET));
+	install_hook(subhook_new((void*)fclose, (void*)fclose_fake_success, SUBHOOK_64BIT_OFFSET));
+	install_hook(PGDB_FAKE_CREATE_FETCH_HOOK(FetchFileUuid));
+
+	u_map_put(request->map_header, "Content-Length", FAKE_IMAGE_SIZE_C_STR);
+	u_map_put(request->map_header, "Content-Type", "image/png");
+	ulfius_set_binary_body_request(request, "[+w]JRpn7P4Y.F4@Yyi2NV38&.!n$"
+						"!gLy5VU&5W}92SG$AW{7X?MDM8}&q"
+						"k2A&$)HTz-b54ERGqU;9:J%}h8Fb&C"
+						"v_A6QD;WLE2T", FAKE_IMAGE_SIZE);
+
+	authenticate_endpoint();
+	endpoint->file_upload = (api_file_upload_t*)calloc(1, sizeof(api_file_upload_t));
+	endpoint->file_upload->allowed_files = FILE_TYPE_IMAGE_PNG;
+	endpoint->file_upload->relative_path = string_from_literal("testfile.png");
+
+	ASSERT_EQ(api_auth_callback_upload_file(request, response, instance), U_CALLBACK_COMPLETE);
+	EXPECT_EQ(response->status, 500);	
+}

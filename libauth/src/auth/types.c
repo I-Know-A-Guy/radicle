@@ -135,18 +135,18 @@ void auth_session_access_entry_free(void* ptr) {
 
 int file_type_from_str(const char* type) {
 	if(strcmp(type, "image/jpeg") == 0 || strcmp(type, "image/jpg") == 0) {
-		return IMAGE_JPEG;
+		return FILE_TYPE_IMAGE_JPEG;
 	} else if(strcmp(type, "image/png") == 0) {
-		return IMAGE_PNG;
+		return FILE_TYPE_IMAGE_PNG;
 	}
-	return UNKNOWN;
+	return FILE_TYPE_UNKNOWN;
 }
 
 const char* file_type_to_str(file_type_t type) {
 	switch(type) {
-		case IMAGE_JPEG:
+		case FILE_TYPE_IMAGE_JPEG:
 			return "image/jpeg";
-		case IMAGE_PNG:
+		case FILE_TYPE_IMAGE_PNG:
 			return "image/png";
 		default:
 			return NULL;

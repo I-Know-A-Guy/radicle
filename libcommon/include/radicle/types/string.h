@@ -92,6 +92,16 @@ string_t* string_from_literal(const char* literal);
 string_t* string_copy(const string_t* string);
 
 /**
+ * @brief Creates a new string and copies value of first then seconds
+ *
+ * @param first Beginning string
+ * @param second Tailing string
+ *
+ * @return Returns new string
+ */
+string_t* string_cat(const string_t* first, const string_t* second);
+
+/**
  * @brief Frees \t str and sets the pointer to NULL.
  * 
  * @param str Pointer \ref string_t object to free. 

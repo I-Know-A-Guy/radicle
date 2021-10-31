@@ -22,6 +22,12 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Validation missing parameter";
 		case VALIDATION_EMAIL_ALREADY_VERIFIED:
 			return "Email has already been verified.";
+		case VALIDATION_FILE_UPLOAD_INVALID_CONTENT_LENGTH:
+			return "Content length given by http header doesnt match binary body length.";
+		case VALIDATION_FILE_UPLOAD_UNKNOWN_TYPE:
+			return "File type is unknown.";
+		case VALIDATION_FILE_UPLOAD_FILE_TYPE_NOT_ALLOWED:
+			return "File type is not allowed.";
 		case PGDB:
 			return "PGDB codes";
 		case PGDB_UNABLE_TO_CLAIM:
@@ -84,6 +90,12 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Failed to save new ip to blacklsit";
 		case ERROR_SAVE_BLACKLIST_ACCESS:
 			return "Failed to save blacklist access.";
+		case FILE_UPLOAD_IS_NULL:
+			return "Before calling api_auth_callback_upload_file make sure endpoint->file_upload has been initialised with relative path";
+		case ERROR_SAVING_FILE:
+			return "Failed to save file to database.";
+		case ERROR_WRITING_FILE:
+			return "Failed to write file to disc.";
 		default:
 			return "missing error message.";
 	}

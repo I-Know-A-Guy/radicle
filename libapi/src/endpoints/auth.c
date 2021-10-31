@@ -5,6 +5,7 @@
 
 #include <jansson.h>
 #include <ulfius.h>
+#include <errno.h>
 
 #include "radicle/api/mail/sendgrid.h"
 #include "radicle/auth/db.h"
@@ -18,6 +19,7 @@
 #include "radicle/api/endpoints/endpoint.h"
 #include "radicle/api/endpoints/auth.h"
 #include "radicle/api/endpoints/internal_codes.h"
+#include "radicle/types/uuid.h"
 
 int api_auth_callback_register(const struct _u_request * request, struct _u_response * response, void * user_data) {
 
@@ -431,4 +433,76 @@ int api_auth_callback_verify_new_email(const struct _u_request * request, struct
 	}
 
 	return RESPOND(200, DEFAULT_200_MSG, SUCCESS);
+}
+
+/** @todo test this function */
+int api_auth_callback_upload_file(const struct _u_request * request, struct _u_response * response, void * user_data) {
+	api_instance_t* instance = user_data;
+	api_endpoint_t* endpoint = response->shared_data;
+
+	// This should only be required for debugging
+	if(endpoint->file_upload == NULL) {
+		ERROR("Before calling api_auth_callback_upload_file make sure endpoint->file_upload has been initialised with relative path\n");
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, FILE_UPLOAD_IS_NULL);
+	}
+
+	int64_t content_length;
+	string_t* content_type_str = NULL;
+	if(api_map_get_int64(request->map_header, "content-length", &content_length) ||
+	   api_map_get_string(request->map_header, "content-type", &content_type_str)) {
+		// content_type must not be freed here because it wont have been
+		// set
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(400, "Missing header", VALIDATION_MISSING_PARAMETER); 
+	}
+
+	file_type_t file_type = file_type_from_str(content_type_str->ptr);
+	DEBUG("%s %d:%d\n", content_type_str->ptr, file_type, file_type & endpoint->file_upload->allowed_files);
+	string_free(&content_type_str);
+
+
+	if((file_type & endpoint->file_upload->allowed_files) == 0) {
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(400, "File type is not allowed.", VALIDATION_FILE_UPLOAD_FILE_TYPE_NOT_ALLOWED);
+	}
+
+	/** If this is true, the image file is probably true because
+	 * binary_body_length has been reduced to max size allowed */
+	if(request->binary_body_length != content_length || content_length == 0) {
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(400, "Your file is either corupt, too large or not given.", VALIDATION_FILE_UPLOAD_INVALID_CONTENT_LENGTH); 
+	}
+
+	auth_file_t* file = calloc(1, sizeof(auth_file_t));
+	file->path = string_cat(instance->root_files_folder, endpoint->file_upload->relative_path);
+	file->name = string_from_literal("filename");
+	file->size = request->binary_body_length;
+	file->owner = uuid_copy(endpoint->account->uuid);
+	file->type = file_type;
+	file->uploaded = time(NULL);
+
+	/** Open file and write to it, if it fails, transaction will be
+	 * rollbacked */
+	FILE* fout = fopen(file->path->ptr, "w");
+	errno = 0;
+	if(fout == NULL || fwrite(request->binary_body, sizeof(unsigned char), file->size, fout) != file->size) {
+		ERROR("Failed to write file. %s\n", strerror(errno));
+		fclose(fout);
+		auth_file_free(&file);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_FILE);
+	}	
+	fclose(fout);
+
+	/** If fails, it is important to remove file which was uploaded before
+	 * */
+	if(auth_save_file(endpoint->conn->connection, file)) {
+		remove(file->path->ptr);	
+		auth_file_free(&file);
+		api_endpoint_safe_rollback(request, response);
+		return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_FILE);
+	}
+
+	return U_CALLBACK_CONTINUE;
 }

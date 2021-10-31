@@ -176,9 +176,9 @@ typedef struct auth_session_access_entry {
 void auth_session_access_entry_free(void* ptr);
 
 typedef enum file_type {
-	UNKNOWN=0,
-	IMAGE_JPEG,
-	IMAGE_PNG
+	FILE_TYPE_UNKNOWN=0b0,
+	FILE_TYPE_IMAGE_JPEG=0b1,
+	FILE_TYPE_IMAGE_PNG=0b10
 } file_type_t;
 
 int file_type_from_str(const char* type);

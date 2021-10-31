@@ -481,7 +481,7 @@ TEST_F(RadicleAuthTests, TestAuthSaveFileWrongColumns) {
 PGDB_FAKE_FETCH(FetchGetFile) {
 	PGDB_FAKE_RESULT_6(PGRES_TUPLES_OK, "owner", "type", "path", "name", "uploaded", "size");
 	PGDB_FAKE_UUID(FAKE_UUID);
-	PGDB_FAKE_C_STR(file_type_to_str(IMAGE_PNG));
+	PGDB_FAKE_C_STR(file_type_to_str(FILE_TYPE_IMAGE_PNG));
 	PGDB_FAKE_C_STR("Path");
 	PGDB_FAKE_C_STR("Name");
 	PGDB_FAKE_TIMESTAMP(12345);

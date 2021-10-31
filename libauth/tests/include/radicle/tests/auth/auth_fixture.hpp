@@ -108,7 +108,7 @@ class RadicleAuthTests: public RadiclePGDBHooks {
 			file->name = string_copy(common_string);
 			file->path = string_copy(common_string);
 			file->owner = uuid_copy(common_uuid);
-			file->type = IMAGE_JPEG;
+			file->type = FILE_TYPE_IMAGE_JPEG;
 			files.push_back(file);
 			return file;
 		}

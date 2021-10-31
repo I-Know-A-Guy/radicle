@@ -79,7 +79,16 @@ int api_auth_callback_cookie_info(const struct _u_request * request, struct _u_r
  */
 int api_auth_callback_send_new_email_verification(const struct _u_request * request, struct _u_response * response, void * user_data);
 
+/**
+ * @brief Verifies email change token
+ */
 int api_auth_callback_verify_new_email(const struct _u_request * request, struct _u_response * response, void * user_data);
+
+/**
+ * @brief Middle callback for file upload, endpont->file_upload must have
+ * allready been init
+ */
+int api_auth_callback_upload_file(const struct _u_request * request, struct _u_response * response, void * user_data);
 
 #if defined(__cplusplus)
 }

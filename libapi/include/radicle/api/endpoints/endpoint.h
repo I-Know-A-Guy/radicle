@@ -43,6 +43,40 @@ extern "C" {
 #define RESPOND_JSON(status, message, internal_status) api_endpoint_respond(request, response, user_data, status, message, internal_status);
 
 /**
+ * @brief Checks if key is given in map, then converts it to int and sets
+ * pointer.
+ *
+ * @param map Map to check key
+ * @param key Key to extract from map
+ * @param result Result pointer
+ *
+ * @return Returns 0 on success
+ */
+int api_map_get_int64(const struct _u_map* map, const char* key, int64_t* result);
+
+/**
+ * @brief Checks if key is given and then returns c_string as string_t
+ *
+ * @param map Map to check key
+ * @param key Key to extract from map
+ * @param result Result pointer
+ *
+ * @return Returns 0 on success
+ */
+int api_map_get_string(const struct _u_map* map, const char* key, string_t** result);
+
+/**
+ * @brief This struct will be initialized by callback before upload,
+ * then uuid will be set by uploading callback to be further used by
+ * next callback to save or update references to other tables
+ */
+typedef struct api_file_upload {
+	string_t* relative_path; /**< Path without root folder */
+	uuid_t* uuid; /**< UUID of uploaded file. */
+	file_type_t allowed_files; /**< Bitor of all allowed files */
+} api_file_upload_t;
+
+/**
  * @brief Contains a connection to the database. Received by \ref pgdb_connection_queue_t
  */
 typedef struct api_endpoint {
@@ -54,6 +88,8 @@ typedef struct api_endpoint {
 	bool authenticated;
 	auth_account_t* account; /**< User accessing api. */
 	bool refresh_cookie; /**< If requester already has a cookie, but a new one with account linked to it has to be created, set to true. */
+
+	api_file_upload_t* file_upload;
 } api_endpoint_t;
 
 /**

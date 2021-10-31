@@ -319,6 +319,13 @@ int api_instance_load_from_file(const char* file, api_instance_t** config) {
 		return 1;
 	}
 
+	if(api_config_get_string(data, "root_files_folder", &(*config)->root_files_folder)) {
+		json_decref(data);
+		api_instance_free(config);
+		return 1;
+	}
+
+
 	if(api_config_get_number(data, "max_session_accesses_in_lookup_delta", &(*config)->max_session_accesses_in_lookup_delta)) {
 		json_decref(data);
 		api_instance_free(config);
@@ -365,6 +372,7 @@ void api_instance_free(api_instance_t** config) {
 	string_free(&(*config)->default_access_control_allow_headers);
 	string_free(&(*config)->verification_url);
 	string_free(&(*config)->verification_reroute_url);
+	string_free(&(*config)->root_files_folder);
 	sendgrid_instance_free(&(*config)->sendgrid);
 	api_cookie_config_free(&(*config)->session_cookie);
 	pgdb_connection_queue_free(&(*config)->queue);

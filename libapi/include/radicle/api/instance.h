@@ -90,6 +90,7 @@ typedef struct api_instance {
 	time_t max_session_accesses_lookup_delta_in_s; /**< Time in seconds of how which accesses should be retrieved. */
 	int max_session_accesses_in_lookup_delta; /**< If user exceeds this delta, the user will be banned for x seconds. */
 	time_t max_session_accesses_penalty_in_s; /**< Amount of time ip will be banned. */
+	string_t* root_files_folder; /**< All files will be written to this path */
 	void* custom;
 } api_instance_t;
 

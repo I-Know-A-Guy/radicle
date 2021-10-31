@@ -75,6 +75,7 @@ class APITests: public RadiclePGDBHooks {
 		instance->session_cookie->same_site = U_COOKIE_SAME_SITE_NONE;
 		instance->verification_reroute_url = string_from_literal("Reroute Url");
 		instance->password_reset_url = string_from_literal("pw reset url");
+		instance->root_files_folder = string_from_literal("/test/");
 		return instance;
 	}
 
@@ -82,7 +83,7 @@ class APITests: public RadiclePGDBHooks {
 		struct _u_request* request = (struct _u_request*)calloc(1, sizeof(struct _u_request));
 		ulfius_init_request(request);
 
-		u_map_put(request->map_header, "content-type", "application/json");
+		u_map_put(request->map_header, "Content-Type", "application/json");
 
 		request->client_address = (struct sockaddr*)calloc(1, sizeof(sockaddr_in));
 		request->client_address->sa_family = AF_INET;

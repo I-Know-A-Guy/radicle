@@ -53,3 +53,14 @@ TEST_F(RadicleTests, TestStringLiteral) {
 	EXPECT_STREQ(str->ptr, "Hello World!");
 	string_free(&str);
 }
+
+TEST_F(RadicleTests, TestStringCat) {
+	string_t* first  = string_from_literal("Hello");
+	string_t* second = string_from_literal(" World!");
+	string_t* result = string_cat(first, second);
+	EXPECT_STREQ(result->ptr, "Hello World!");
+	EXPECT_EQ(strlen(result->ptr), result->length);
+	string_free(&first);
+	string_free(&second);
+	string_free(&result);
+}

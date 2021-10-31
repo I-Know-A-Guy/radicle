@@ -59,6 +59,13 @@ string_t* string_new_empty(const size_t length) {
 	return buf;
 }
 
+string_t* string_cat(const string_t* first, const string_t* second) {
+	string_t* res = string_new_empty(first->length + second->length);
+	memcpy(res->ptr, first->ptr, first->length);
+	memcpy(res->ptr + first->length, second->ptr, second->length);
+	return res;
+}
+
 void string_free(string_t** str) {
 	if(*str == NULL)
 	       	return;

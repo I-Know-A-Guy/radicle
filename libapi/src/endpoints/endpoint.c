@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ulfius.h>
+#include <inttypes.h>
+#include <errno.h>
 
 #include "radicle/auth.h"
 #include "radicle/auth/db.h"
@@ -21,6 +23,36 @@
 #include "radicle/types/string.h"
 #include "radicle/api/endpoints/internal_codes.h"
 #include "radicle/types/uuid.h"
+
+int api_map_get_int64(const struct _u_map* map, const char* key, int64_t* result) {
+	if(!u_map_has_key_case(map, key)) {
+		DEBUG("Missing key %s\n", key);
+		return 1;
+	}
+
+	errno = 0;
+	char* endptr;
+	*result = strtoimax(u_map_get_case(map, key), &endptr, 10);
+
+	if(errno != 0) {
+		DEBUG("Failed to convert to int %s\n", strerror(errno));
+		return 1;
+	}
+
+	return 0;
+}
+
+
+int api_map_get_string(const struct _u_map* map, const char* key, string_t** result) {
+	if(!u_map_has_key_case(map, key)) {
+		DEBUG("Missing key %s\n", key);
+		return 1;
+	}
+
+	*result = string_new(u_map_get_case(map, key), u_map_get_case_length(map, key));
+	return 0;
+}
+
 
 int socket_info(const struct sockaddr* address, string_t** buffer, unsigned int* port) {
 	*buffer = calloc(1, sizeof(string_t));
