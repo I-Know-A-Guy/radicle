@@ -26,6 +26,9 @@
 #include "radicle/types/uuid.h"
 #include "radicle/types/linked_list.h"
 
+#ifndef RADICLE_LIBCOMMON_TESTS_INCLUDE_RADICLE_TESTS_RADICLE_FIXTURE_HPP
+#define RADICLE_LIBCOMMON_TESTS_INCLUDE_RADICLE_TESTS_RADICLE_FIXTURE_HPP
+
 /**
  * @brief Provies common_uuid, common_string and manages strings, uuids and hook.
  */
@@ -137,3 +140,4 @@ class RadicleTests: public ::testing::Test {
 
 };
 
+#endif // RADICLE_LIBCOMMON_TESTS_INCLUDE_RADICLE_TESTS_RADICLE_FIXTURE_HPP

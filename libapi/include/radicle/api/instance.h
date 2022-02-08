@@ -91,6 +91,7 @@ typedef struct api_instance {
 	int max_session_accesses_in_lookup_delta; /**< If user exceeds this delta, the user will be banned for x seconds. */
 	time_t max_session_accesses_penalty_in_s; /**< Amount of time ip will be banned. */
 	string_t* root_files_folder; /**< All files will be written to this path */
+	const char* (* custom_errors_msg)(int code); /**< This function will be called for every code after 10000, if code does not exist, return a string and not null. **/
 	void* custom;
 } api_instance_t;
 

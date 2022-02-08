@@ -38,7 +38,7 @@ int api_auth_callback_register(const struct _u_request * request, struct _u_resp
 
 	auth_account_t* duplicate_account = NULL;
 	if(auth_get_account_by_email(endpoint->conn->connection, endpoint->account->email, &duplicate_account)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_EMAIL_LOOKUP);
 	}
 
@@ -51,31 +51,31 @@ int api_auth_callback_register(const struct _u_request * request, struct _u_resp
 		string_free(&fake_pw_buffer);
 
 		if(send_duplicate_mail_notify(instance->sendgrid, endpoint->account->email))
-			api_endpoint_log(request, endpoint, 0, ERROR_SEND_MAIL_DUPLICATE_REGISTER_NOTIFY);
+			api_endpoint_log(request, instance, endpoint, 0, ERROR_SEND_MAIL_DUPLICATE_REGISTER_NOTIFY);
 
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(200, "A verification email has been sent to your email.", DUPLICATE_EMAIL_REGISTER);
 	}
 
 	if(auth_register(endpoint->conn->connection, endpoint->account)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_REGISTER);
 	}
 
 	string_t* registration_token = NULL;
 	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, NULL, &registration_token)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
 		string_free(&registration_token);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
 	if(send_verification_mail(instance->sendgrid, endpoint->account->email, instance->verification_url, registration_token))
-		api_endpoint_log(request, endpoint, 0, ERROR_SEND_MAIL_REGISTER_TOKEN);
+		api_endpoint_log(request, instance, endpoint, 0, ERROR_SEND_MAIL_REGISTER_TOKEN);
 
 	string_free(&registration_token);
 
@@ -93,24 +93,24 @@ int api_auth_callback_resend_verification_mail(const struct _u_request * request
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_BEGIN);
 
 	if(auth_remove_token_by_owner(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_REVOKE_REGISTRATIONS_TOKEN);
 	}
 
 	string_t* registration_token = NULL;
 	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, REGISTRATION, NULL, &registration_token)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
 		string_free(&registration_token);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
 	if(send_verification_mail(instance->sendgrid, endpoint->account->email, instance->verification_url, registration_token))
-		api_endpoint_log(request, endpoint, 0, ERROR_SEND_MAIL_REGISTER_TOKEN);
+		api_endpoint_log(request, instance, endpoint, 0, ERROR_SEND_MAIL_REGISTER_TOKEN);
 
 	string_free(&registration_token);
 
@@ -136,14 +136,14 @@ int api_auth_callback_register_verify(const struct _u_request * request, struct 
 	uuid_t* owner = NULL;
 	if(auth_verify_token(endpoint->conn->connection, token, REGISTRATION, &owner, NULL)) {
 		string_free(&token);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
 	}
 
 	string_free(&token);
 
 	if(owner == NULL)  {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		char location_url[instance->verification_reroute_url->length + 16];
 		sprintf(location_url, "%s?verified=false", instance->verification_reroute_url->ptr);
 		ulfius_add_header_to_response(response, "Location", location_url);
@@ -152,12 +152,12 @@ int api_auth_callback_register_verify(const struct _u_request * request, struct 
 
 	if(auth_update_account_verification_status(endpoint->conn->connection, owner, true)) {
 		uuid_free(&owner);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
 	}
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
@@ -224,41 +224,41 @@ int api_auth_callback_send_password_reset(const struct _u_request * request, str
 	auth_account_t* account = NULL;
 	if(auth_get_account_by_email(endpoint->conn->connection, email, &account)) {
 		string_free(&email);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_EMAIL_LOOKUP);
 	}
 
 
 	if(account == NULL) {
 		if(send_mail_not_associated(instance->sendgrid, email, instance->no_associated_account_url))
-			api_endpoint_log(request, endpoint, 0, FAILED_TO_SEND_MAIL);
-		api_endpoint_safe_rollback(request, response);
+			api_endpoint_log(request, instance, endpoint, 0, FAILED_TO_SEND_MAIL);
+		api_endpoint_safe_rollback(request, response, instance);
 		string_free(&email);
 		return RESPOND(200, "Email has been sent.", PASSWORD_RESET_EMAIL_DOESNT_EXIST);
 	} 
 	string_free(&email);
 
 	if(!account->verified) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(403, "Please verify your email before requesting a password reset.", VALIDATION_EMAIL_NOT_VERIFIED);
 	}
 
 	string_t* token = NULL;
 	if(auth_create_token(endpoint->conn->connection, account->uuid, PASSWORD_RESET, NULL, &token)) {
 		auth_account_free(&account);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
 		string_free(&token);
 		auth_account_free(&account);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
 	if(send_reset_password_mail(instance->sendgrid, account->email, instance->password_reset_url, token))
-		api_endpoint_log(request, endpoint, 0, FAILED_TO_SEND_MAIL);
+		api_endpoint_log(request, instance, endpoint, 0, FAILED_TO_SEND_MAIL);
 
 	string_free(&token);
 	auth_account_free(&account);
@@ -298,7 +298,7 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	if(auth_verify_token(endpoint->conn->connection, token, PASSWORD_RESET, &uuid, NULL)) {
 		string_free(&password);
 		string_free(&token);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
 	}
 	string_free(&token);
@@ -306,14 +306,14 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	if(uuid == NULL) {
 		string_free(&password);
 		uuid_free(&uuid);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(400, "Invalid token.", INVALID_TOKEN_TYPE);
 	}
 
 	if(auth_hash_password(password, &password_hashed)) {
 		string_free(&password);	
 		uuid_free(&uuid);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_PASSWORD);
 	}
 
@@ -322,7 +322,7 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	if(auth_update_password(endpoint->conn->connection, uuid, password_hashed)) {
 		string_free(&password);
 		uuid_free(&uuid);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_PASSWORD);
 	}
 
@@ -330,7 +330,7 @@ int api_auth_callback_reset_password(const struct _u_request * request, struct _
 	uuid_free(&uuid);
 
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
@@ -364,7 +364,7 @@ int api_auth_callback_send_new_email_verification(const struct _u_request * requ
 	string_t* token = NULL;
 	if(auth_create_token(endpoint->conn->connection, endpoint->account->uuid, CHANGE_EMAIL, email, &token)) {
 		string_free(&email);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_CREATING_TOKEN);
 	}
 
@@ -373,7 +373,7 @@ int api_auth_callback_send_new_email_verification(const struct _u_request * requ
 		string_free(&email);
 		string_free(&token);
 
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 
 	}
@@ -381,7 +381,7 @@ int api_auth_callback_send_new_email_verification(const struct _u_request * requ
 	string_free(&email);
 	string_free(&token);
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_TRANSACTION_COMMIT);
 	}
 
@@ -407,28 +407,28 @@ int api_auth_callback_verify_new_email(const struct _u_request * request, struct
 	string_t* new_email = NULL;
 	if(auth_verify_token(endpoint->conn->connection, token, CHANGE_EMAIL, &owner, &new_email)) {
 		string_free(&token);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
 	}
 
 	string_free(&token);
 
 	if(owner == NULL) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(400, "Invalid token.", INVALID_TOKEN_TYPE);
 	}
 
 	if(auth_update_account_email(endpoint->conn->connection, owner, new_email)) {
 		uuid_free(&owner);
 		string_free(&new_email);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_UPDATING_ACCOUNT_EMAIL);
 	}
 
 	uuid_free(&owner);
 	string_free(&new_email);
 	if(pgdb_transaction_commit(endpoint->conn->connection)) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_VERIFYING_TOKEN);
 	}
 
@@ -442,7 +442,7 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 	// This should only be required for debugging
 	if(endpoint->file_upload == NULL) {
 		ERROR("Before calling api_auth_callback_upload_file make sure endpoint->file_upload has been initialised with relative path\n");
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, FILE_UPLOAD_IS_NULL);
 	}
 
@@ -452,7 +452,7 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 	   api_map_get_string(request->map_header, "content-type", &content_type_str)) {
 		// content_type must not be freed here because it wont have been
 		// set
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(400, "Missing header", VALIDATION_MISSING_PARAMETER); 
 	}
 
@@ -460,14 +460,14 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 	string_free(&content_type_str);
 
 	if((file_type & endpoint->file_upload->allowed_files) == 0) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(400, "File type is not allowed.", VALIDATION_FILE_UPLOAD_FILE_TYPE_NOT_ALLOWED);
 	}
 
 	/** If this is true, the image file is probably true because
 	 * binary_body_length has been reduced to max size allowed */
 	if(request->binary_body_length != content_length || content_length == 0) {
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(400, "Your file is either corupt, too large or not given.", VALIDATION_FILE_UPLOAD_INVALID_CONTENT_LENGTH); 
 	}
 
@@ -487,7 +487,7 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 		ERROR("Failed to write file. %s\n", strerror(errno));
 		fclose(fout);
 		auth_file_free(&file);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_FILE);
 	}	
 	fclose(fout);
@@ -497,7 +497,7 @@ int api_auth_callback_upload_file(const struct _u_request * request, struct _u_r
 	if(auth_save_file(endpoint->conn->connection, file)) {
 		remove(file->path->ptr);	
 		auth_file_free(&file);
-		api_endpoint_safe_rollback(request, response);
+		api_endpoint_safe_rollback(request, response, instance);
 		return RESPOND(500, DEFAULT_500_MSG, ERROR_SAVING_FILE);
 	}
 

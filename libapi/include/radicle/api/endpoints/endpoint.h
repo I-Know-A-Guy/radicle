@@ -140,7 +140,7 @@ int api_callback_endpoint_check_for_verified_email(const struct _u_request* requ
  *
  * @param Returns 0
  */
-int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status);
+int api_endpoint_log(const struct _u_request* request, api_instance_t* instance, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status);
 
 /**
  * @brief Finishes and clears endpoint, saves access log.
@@ -200,7 +200,7 @@ void api_add_endpoint(struct _u_instance* instance, const char* method, const ch
  * @brief If rollback fails, resets connection so that open transaction wont be
  * transfered to next person.
  */
-void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_response * response);
+void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_response * response, api_instance_t* instance);
 
 #if defined(__cplusplus)
 }

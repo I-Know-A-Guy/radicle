@@ -234,7 +234,7 @@ int api_callback_endpoint_check_for_verified_email(const struct _u_request* requ
 	return U_CALLBACK_CONTINUE;
 }
 
-int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status) {
+int api_endpoint_log(const struct _u_request* request, api_instance_t* instance, api_endpoint_t* endpoint, const unsigned int http_status, const int internal_status) {
 	
 	endpoint->request_log->response_code = http_status;
 	endpoint->request_log->internal_status = internal_status;
@@ -242,12 +242,12 @@ int api_endpoint_log(const struct _u_request* request, api_endpoint_t* endpoint,
 		
 	if(endpoint->session != 0) {
 		if(endpoint->conn != NULL && auth_log_access(endpoint->conn->connection, endpoint->session, endpoint->request_log)) {
-			INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status));
+			INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status, instance->custom_errors_msg));
 		} else if(endpoint->conn == NULL)
-			INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status));
+			INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status,instance->custom_errors_msg));
 
 	} else
-		INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status));
+		INFO("%s:%d %d %d %s\n", endpoint->request_log->ip->ptr, endpoint->request_log->port, http_status, internal_status, internal_errors_msg(internal_status, instance->custom_errors_msg));
 
 	return 0;
 }
@@ -296,7 +296,7 @@ void api_request_log(const struct _u_request* request, auth_request_log_t* log, 
 }
 
 int api_endpoint_respond(const struct _u_request* request, struct _u_response * response, api_instance_t* instance, unsigned int http_status, json_t* body, const int internal_status) {
-	DEBUG("%s\n", internal_errors_msg(internal_status));
+	DEBUG("%s\n", internal_errors_msg(internal_status, instance->custom_errors_msg));
 	api_endpoint_t* endpoint = response->shared_data;
 	if(endpoint != NULL) {
 		// Only fails if it wasnt possible to create new cookie for
@@ -307,7 +307,7 @@ int api_endpoint_respond(const struct _u_request* request, struct _u_response * 
 			body = api_response_object("Failed to create new session.");
 		}
 
-		api_endpoint_log(request, endpoint, http_status, internal_status);
+		api_endpoint_log(request, instance, endpoint, http_status, internal_status);
 
 		if(endpoint->account != NULL) 
 			api_request_log(request, endpoint->request_log, endpoint->account->uuid, http_status);
@@ -354,6 +354,7 @@ void api_endpoint_free(api_endpoint_t* endpoint) {
 	free(endpoint);
 }
 
+/** @todo instead of parameters use bit vars **/
 void api_add_endpoint(struct _u_instance* instance, const char* method, const char* url, int (* callback_function)(const struct _u_request * request, // Input parameters (set by the framework)
                                                          struct _u_response * response,     // Output parameters (set by the user)
                                                          void * user_data), api_instance_t* api_instance, bool authenticated, bool verified, bool jsonBody) {
@@ -375,10 +376,10 @@ void api_add_endpoint(struct _u_instance* instance, const char* method, const ch
 	ulfius_add_endpoint_by_val(instance, method, url, NULL, counter++, callback_function, api_instance);
 }
 
-void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_response * response) {
+void api_endpoint_safe_rollback(const struct _u_request* request, struct _u_response * response, api_instance_t* instance) {
 	api_endpoint_t* endpoint = response->shared_data;
 	if(pgdb_transaction_rollback(endpoint->conn->connection)) {
 		PQreset(endpoint->conn->connection);
-		api_endpoint_log(request, endpoint, 0, ERROR_TRANSACTION_ROLLBACK);
+		api_endpoint_log(request, instance, endpoint, 0, ERROR_TRANSACTION_ROLLBACK);
 	}
 }

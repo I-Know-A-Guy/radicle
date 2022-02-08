@@ -35,6 +35,9 @@
 #include "radicle/pgdb.h"
 #include "radicle/tests/radicle_fixture.hpp"
 
+#ifndef RADICLE_LIBPGDB_TESTS_INCLUDE_RADICLE_TESTS_PGDB_HOOKS_HPP
+#define RADICLE_LIBPGDB_TESTS_INCLUDE_RADICLE_TESTS_PGDB_HOOKS_HPP
+
 #define PGDB_FAKE_CREATE_FETCH_HOOK(name) subhook_new((void*)PQexecParams, (void*)name, SUBHOOK_64BIT_OFFSET)
 #define PGDB_FAKE_INIT_FETCH_STORY(name) name ## _counter = 0
 	
@@ -346,3 +349,5 @@ class RadiclePGDBHooks: public RadicleTests {
 			return buf;
 		}
 };
+
+#endif // RADICLE_LIBPGDB_TESTS_INCLUDE_RADICLE_TESTS_PGDB_HOOKS_HPP

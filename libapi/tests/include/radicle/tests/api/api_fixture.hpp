@@ -4,10 +4,18 @@
 #include "radicle/tests/pgdb_hooks.hpp"
 #include <ulfius.h>
 
+#ifndef RADICLE_LIBAPI_TESTS_INCLUDE_RADICLE_TESTS_API_API_FIXTURE_HPP
+#define RADICLE_LIBAPI_TESTS_INCLUDE_RADICLE_TESTS_API_API_FIXTURE_HPP
+
 #define API_EMPTY_RESULT(name)\
        	PGDB_FAKE_FETCH(name) {\
 	PGDB_FAKE_EMPTY_RESULT(PGRES_TUPLES_OK);\
 }
+
+#define API_EMPTY_QUERY(name, index) \
+     PGDB_FAKE_STORY_BRANCH(name, index); \
+		PGDB_FAKE_EMPTY_RESULT(PGRES_COMMAND_OK); \
+	PGDB_FAKE_STORY_BRANCH_END();                                    \
 
 #define API_FAKE_VERIFIED_ACCOUNT(name, index) \
 	PGDB_FAKE_STORY_BRANCH(name, index);\
@@ -120,3 +128,5 @@ class APITests: public RadiclePGDBHooks {
 		endpoint->authenticated = true;
 	}
 };
+
+#endif // RADICLE_LIBAPI_TESTS_INCLUDE_RADICLE_TESTS_API_API_FIXTURE_HPP

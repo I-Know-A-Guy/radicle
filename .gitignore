@@ -3,3 +3,5 @@ docs
 compile_commands.json
 *.swp
 .cache
+.cproject
+.project

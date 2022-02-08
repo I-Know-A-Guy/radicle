@@ -1,6 +1,7 @@
+#include <stddef.h>
 #include "radicle/api/endpoints/internal_codes.h"
 
-const char* internal_errors_msg(internal_errors_t code) {
+const char* internal_errors_msg(int code, const char* (*custom_error_msgs)(int)) {
 	switch(code) {
 		case SUCCESS:
 			return "Ok";
@@ -96,8 +97,10 @@ const char* internal_errors_msg(internal_errors_t code) {
 			return "Failed to save file to database.";
 		case ERROR_WRITING_FILE:
 			return "Failed to write file to disc.";
-		default:
-			return "missing error message.";
+		default: {
+            if(custom_error_msgs != NULL) return custom_error_msgs(code);
+            return "missing error message.";
+        }
 	}
 }
 

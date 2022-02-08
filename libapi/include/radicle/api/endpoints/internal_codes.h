@@ -90,7 +90,7 @@ typedef enum internal_errors {
 	ERROR_WRITING_FILE
 } internal_errors_t;
 
-const char* internal_errors_msg(internal_errors_t code);
+const char* internal_errors_msg(int code, const char* (*custom_error_msgs)(int));
 
 /**
  * @todo create, then change RESPOND to use this as text and then test if gotos
